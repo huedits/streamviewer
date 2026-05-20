@@ -15,25 +15,24 @@ const UI = {
         this.elements.streamContainer = document.getElementById('streamContainer');
         this.elements.controlBar = document.querySelector('.control-bar');
         
-        // Prevent iframes from pausing on tab switch
+        // Handle visibility change to keep iframes alive
         this.handleVisibilityChange();
     },
     
-    // Handle page visibility changes to keep iframes playing
+    // Prevent iframes from pausing when tab is hidden
     handleVisibilityChange() {
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) {
-                // Page is visible again - refresh iframes that may have paused
+                // Page is visible again
                 const iframes = this.elements.streamContainer.querySelectorAll('iframe');
                 iframes.forEach(iframe => {
-                    const src = iframe.src;
-                    if (src && !src.includes('autoplay')) {
-                        // Add autoplay parameter if missing
-                        if (src.includes('twitch.tv')) {
-                            iframe.src = src.includes('autoplay=true') ? src : src + '&autoplay=true';
-                        } else if (src.includes('youtube.com')) {
-                            iframe.src = src.includes('autoplay=1') ? src : src + '&autoplay=1';
-                        }
+                    // Briefly touch the iframe to prevent pause
+                    const currentSrc = iframe.src;
+                    if (currentSrc) {
+                        // Force iframe to stay active
+                        iframe.style.display = 'none';
+                        iframe.offsetHeight; // Force reflow
+                        iframe.style.display = '';
                     }
                 });
             }
@@ -61,13 +60,14 @@ const UI = {
         return streamCard;
     },
     
-    // Add stream card to container
+    // Add stream card to container (without touching existing iframes)
     addStreamCard(streamData) {
         this.removeEmptyState();
         
         const card = this.createStreamCard(streamData);
         this.elements.streamContainer.appendChild(card);
         
+        // Only update grid class, never touch existing cards
         this.updateGridClass();
         
         requestAnimationFrame(() => {
@@ -118,7 +118,8 @@ const UI = {
         const container = this.elements.streamContainer;
         const count = StreamState.getCount();
         
-        container.classList.remove('count-1', 'count-2', 'count-3', 'count-odd', 'count-even');
+        // Remove all count classes
+        container.classList.remove('count-1', 'count-2', 'count-odd', 'count-even');
         
         if (count === 0) return;
         
@@ -126,11 +127,11 @@ const UI = {
             container.classList.add('count-1');
         } else if (count === 2) {
             container.classList.add('count-2');
-        } else if (count === 3) {
-            container.classList.add('count-3');
         } else if (count % 2 === 1) {
+            // All odd counts (3, 5, 7, etc): first card centered at 50%, rest 2 columns
             container.classList.add('count-odd');
         } else {
+            // All even counts (4, 6, 8, etc): all 2 columns
             container.classList.add('count-even');
         }
     },
@@ -149,7 +150,7 @@ const UI = {
                 <p>Select a platform, enter a <span>channel name</span> and click <span>+</span></p>
             </div>
         `;
-        this.elements.streamContainer.classList.remove('count-1', 'count-2', 'count-3', 'count-odd', 'count-even');
+        this.elements.streamContainer.classList.remove('count-1', 'count-2', 'count-odd', 'count-even');
     },
     
     // Update stream count badge
