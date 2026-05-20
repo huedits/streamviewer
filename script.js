@@ -2,33 +2,202 @@
 let streams = [];
 
 // DOM Elements
-const platformSelect = document.getElementById('platformSelect');
+let platformSelect = document.getElementById('platformSelect');
 const streamInput = document.getElementById('streamInput');
 const addBtn = document.getElementById('addBtn');
 const streamContainer = document.getElementById('streamContainer');
+const controlBar = document.querySelector('.control-bar');
+
+// SVG Icons for each platform
+const platformIcons = {
+    twitch: `<svg class="platform-icon" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/>
+    </svg>`,
+    
+    kick: `<svg class="platform-icon" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M3 3h6v6H3V3zm0 8h6v6H3v-6zm8-8h6v6h-6V3zm0 8h6v6h-6v-6zm8-8h6v6h-6V3z"/>
+    </svg>`,
+    
+    youtube: `<svg class="platform-icon" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+    </svg>`
+};
+
+// Create custom dropdown
+function createCustomDropdown() {
+    const originalSelect = document.getElementById('platformSelect');
+    
+    // Create custom dropdown container
+    const customDropdown = document.createElement('div');
+    customDropdown.className = 'custom-dropdown';
+    
+    // Create button
+    const dropdownButton = document.createElement('button');
+    dropdownButton.className = 'dropdown-button';
+    dropdownButton.type = 'button';
+    
+    // Get selected option
+    const selectedOption = originalSelect.options[originalSelect.selectedIndex];
+    const selectedValue = selectedOption.value;
+    const selectedText = selectedOption.text;
+    
+    dropdownButton.innerHTML = `
+        ${platformIcons[selectedValue]}
+        <span class="selected-text">${selectedText}</span>
+        <span class="arrow">▼</span>
+    `;
+    
+    // Create menu
+    const dropdownMenu = document.createElement('ul');
+    dropdownMenu.className = 'dropdown-menu';
+    
+    // Add options to menu
+    Array.from(originalSelect.options).forEach(option => {
+        const li = document.createElement('li');
+        li.className = 'dropdown-item';
+        if (option.value === selectedValue) {
+            li.classList.add('selected');
+        }
+        li.dataset.value = option.value;
+        li.innerHTML = `
+            ${platformIcons[option.value]}
+            <span>${option.text}</span>
+        `;
+        
+        li.addEventListener('click', function() {
+            // Update original select
+            originalSelect.value = this.dataset.value;
+            
+            // Update button display
+            dropdownButton.innerHTML = `
+                ${platformIcons[this.dataset.value]}
+                <span class="selected-text">${this.querySelector('span').textContent}</span>
+                <span class="arrow">▼</span>
+            `;
+            
+            // Update selected state
+            document.querySelectorAll('.dropdown-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            this.classList.add('selected');
+            
+            // Close dropdown
+            customDropdown.classList.remove('active');
+            
+            // Trigger change event on original select
+            originalSelect.dispatchEvent(new Event('change'));
+        });
+        
+        dropdownMenu.appendChild(li);
+    });
+    
+    // Toggle dropdown
+    dropdownButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        customDropdown.classList.toggle('active');
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!customDropdown.contains(e.target)) {
+            customDropdown.classList.remove('active');
+        }
+    });
+    
+    // Assemble custom dropdown
+    customDropdown.appendChild(dropdownButton);
+    customDropdown.appendChild(dropdownMenu);
+    
+    // Replace original select
+    originalSelect.parentNode.insertBefore(customDropdown, originalSelect);
+    originalSelect.classList.add('hidden-select');
+    
+    // Update reference to use the hidden select
+    platformSelect = originalSelect;
+}
+
+// Add layout control buttons
+function addLayoutControls() {
+    const layoutControls = document.createElement('div');
+    layoutControls.className = 'layout-controls';
+    layoutControls.innerHTML = `
+        <button class="layout-btn active" data-layout="auto" title="Auto Layout">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zm10-10h8v8h-8V3zm0 10h8v8h-8v-8z"/>
+            </svg>
+        </button>
+        <button class="layout-btn" data-layout="single" title="Single Column">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M4 5h16v14H4V5z"/>
+            </svg>
+        </button>
+        <button class="layout-btn" data-layout="double" title="Two Columns">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M4 5h7v14H4V5zm9 0h7v14h-7V5z"/>
+            </svg>
+        </button>
+    `;
+    
+    controlBar.appendChild(layoutControls);
+    
+    // Layout button event listeners
+    document.querySelectorAll('.layout-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.layout-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            const layout = this.dataset.layout;
+            switch(layout) {
+                case 'single':
+                    streamContainer.style.gridTemplateColumns = '1fr';
+                    break;
+                case 'double':
+                    streamContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
+                    break;
+                case 'auto':
+                default:
+                    streamContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(400px, 1fr))';
+                    break;
+            }
+        });
+    });
+}
+
+// Update stream count display
+function updateStreamCount() {
+    // Remove existing count badge
+    const existingBadge = document.querySelector('.stream-count');
+    if (existingBadge) {
+        existingBadge.remove();
+    }
+    
+    // Add new count badge if there are streams
+    if (streams.length > 0) {
+        const countBadge = document.createElement('span');
+        countBadge.className = 'stream-count';
+        countBadge.textContent = streams.length;
+        addBtn.appendChild(countBadge);
+    }
+}
 
 // Embed URL builders for each platform
 function getEmbedUrl(platform, channelOrId) {
-    // Trim whitespace
     const input = channelOrId.trim();
     
     switch (platform) {
         case 'twitch':
-            // Embed Twitch channel
-            // Supports: channel name or twitch.tv/channel URL
             let twitchChannel = input;
-            // Extract channel name from URL if full URL is pasted
             const twitchMatch = input.match(/(?:twitch\.tv\/)([\w-]+)/);
             if (twitchMatch) {
                 twitchChannel = twitchMatch[1];
             }
             return {
-                url: `https://player.twitch.tv/?channel=${encodeURIComponent(twitchChannel)}&parent=huedits.github.io/streamviewer`,
+                url: `https://player.twitch.tv/?channel=${encodeURIComponent(twitchChannel)}&parent=huedits.github.io`,
                 channel: twitchChannel
             };
         
         case 'kick':
-            // Embed Kick channel
             let kickChannel = input;
             const kickMatch = input.match(/(?:kick\.com\/)([\w-]+)/);
             if (kickMatch) {
@@ -40,9 +209,7 @@ function getEmbedUrl(platform, channelOrId) {
             };
         
         case 'youtube':
-            // Embed YouTube video or live stream
             let videoId = input;
-            // Extract video ID from various YouTube URL formats
             const youtubeMatch = input.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/live\/)([\w-]{11})/);
             if (youtubeMatch) {
                 videoId = youtubeMatch[1];
@@ -71,6 +238,7 @@ function renderStreams() {
                 <p>Select a platform, enter a <span>channel name</span> and click <span>+</span></p>
             </div>
         `;
+        updateStreamCount();
         return;
     }
 
@@ -78,9 +246,19 @@ function renderStreams() {
     streams.forEach((stream, index) => {
         const streamCard = document.createElement('div');
         streamCard.className = 'stream-wrapper';
+        
+        // Add new-stream class if this is the last added stream
+        if (index === streams.length - 1 && streams.length > 1) {
+            streamCard.classList.add('new-stream');
+        }
+        
+        streamCard.dataset.index = index;
         streamCard.innerHTML = `
             <div class="stream-header">
-                <span class="platform-badge ${stream.platform}">${stream.platform}</span>
+                <span class="platform-badge ${stream.platform}">
+                    ${platformIcons[stream.platform]}
+                    ${stream.platform}
+                </span>
                 <span class="stream-url" title="${stream.channel}">${stream.channel}</span>
                 <button class="remove-btn" data-index="${index}" title="Remove stream">×</button>
             </div>
@@ -93,6 +271,9 @@ function renderStreams() {
             </div>
         `;
         streamContainer.appendChild(streamCard);
+        
+        // Trigger reflow for animation
+        void streamCard.offsetWidth;
     });
 
     // Attach remove event listeners
@@ -102,6 +283,8 @@ function renderStreams() {
             removeStream(index);
         });
     });
+    
+    updateStreamCount();
 }
 
 // Add a new stream
@@ -111,7 +294,11 @@ function addStream() {
 
     // Validate input
     if (!input) {
-        alert('Please enter a channel name or video ID.');
+        // Shake the input to indicate error
+        streamInput.style.animation = 'shake 0.5s ease';
+        setTimeout(() => {
+            streamInput.style.animation = '';
+        }, 500);
         streamInput.focus();
         return;
     }
@@ -138,13 +325,45 @@ function addStream() {
 
     // Focus back on input for quick adding
     streamInput.focus();
+    
+    // Scroll to the new stream if it's not visible
+    setTimeout(() => {
+        const lastStream = document.querySelector('.stream-wrapper:last-child');
+        if (lastStream) {
+            lastStream.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }, 100);
 }
 
 // Remove a stream by index
 function removeStream(index) {
-    streams.splice(index, 1);
-    renderStreams();
+    const streamCard = document.querySelector(`.stream-wrapper[data-index="${index}"]`);
+    
+    if (streamCard) {
+        // Add removing animation
+        streamCard.classList.add('removing');
+        
+        // Remove after animation completes
+        setTimeout(() => {
+            streams.splice(index, 1);
+            renderStreams();
+        }, 300);
+    } else {
+        streams.splice(index, 1);
+        renderStreams();
+    }
 }
+
+// Add shake animation for invalid input
+const shakeStyle = document.createElement('style');
+shakeStyle.textContent = `
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+`;
+document.head.appendChild(shakeStyle);
 
 // Event Listeners
 addBtn.addEventListener('click', addStream);
@@ -155,5 +374,15 @@ streamInput.addEventListener('keypress', function(e) {
     }
 });
 
-// Initial render
+// Keyboard shortcut to remove last stream
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'z' && streams.length > 0) {
+        e.preventDefault();
+        removeStream(streams.length - 1);
+    }
+});
+
+// Initialize custom dropdown, layout controls, and render
+createCustomDropdown();
+addLayoutControls();
 renderStreams();
