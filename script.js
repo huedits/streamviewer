@@ -1,6 +1,7 @@
 // State to track added streams
 let streams = [];
 let currentLayout = 'single'; // Default to single column layout
+let activeAudioStream = null; // Track which stream has audio enabled
 
 // DOM Elements
 let platformSelect = document.getElementById('platformSelect');
@@ -11,15 +12,15 @@ const controlBar = document.querySelector('.control-bar');
 
 // SVG Icons for each platform
 const platformIcons = {
-    twitch: `<svg class="platform-icon" viewBox="0 0 24 24" fill="currentColor">
+    twitch: `<svg class="platform-icon" viewBox="0 0 24 24" fill="#9147ff">
         <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/>
     </svg>`,
     
-    kick: `<svg class="platform-icon" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M3 3h7.2l1.8 4.8L13.8 3H21l-6 8.4L21 21h-7.2l-1.8-5.4L10.2 21H3l6-8.4L3 3z"/>
+    kick: `<svg class="platform-icon" viewBox="0 0 24 24" fill="#53fc18">
+        <path d="M7 3v18M7 12l10-9M7 12l10 9"/>
     </svg>`,
     
-    youtube: `<svg class="platform-icon" viewBox="0 0 24 24" fill="currentColor">
+    youtube: `<svg class="platform-icon" viewBox="0 0 24 24" fill="#ff0000">
         <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
     </svg>`
 };
@@ -227,9 +228,11 @@ function getTwitchParent() {
     return hostname || 'localhost';
 }
 
-// Embed URL builders for each platform
-function getEmbedUrl(platform, channelOrId) {
+// Build embed URL with audio parameters
+function getEmbedUrl(platform, channelOrId, index) {
     const input = channelOrId.trim();
+    let baseUrl = '';
+    let channel = '';
     
     switch (platform) {
         case 'twitch':
@@ -239,11 +242,11 @@ function getEmbedUrl(platform, channelOrId) {
                 twitchChannel = twitchMatch[1];
             }
             const parent = getTwitchParent();
-            console.log('Twitch parent:', parent); // Debug log
-            return {
-                url: `https://player.twitch.tv/?channel=${encodeURIComponent(twitchChannel)}&parent=${parent}`,
-                channel: twitchChannel
-            };
+            channel = twitchChannel;
+            // First stream has audio, rest are muted
+            const muted = index === 0 ? 'false' : 'true';
+            baseUrl = `https://player.twitch.tv/?channel=${encodeURIComponent(twitchChannel)}&parent=${parent}&muted=${muted}`;
+            break;
         
         case 'kick':
             let kickChannel = input;
@@ -251,10 +254,10 @@ function getEmbedUrl(platform, channelOrId) {
             if (kickMatch) {
                 kickChannel = kickMatch[1];
             }
-            return {
-                url: `https://player.kick.com/${encodeURIComponent(kickChannel)}`,
-                channel: kickChannel
-            };
+            channel = kickChannel;
+            // Kick doesn't support mute parameter directly, we'll handle via iframe attribute
+            baseUrl = `https://player.kick.com/${encodeURIComponent(kickChannel)}`;
+            break;
         
         case 'youtube':
             let videoId = input;
@@ -262,14 +265,29 @@ function getEmbedUrl(platform, channelOrId) {
             if (youtubeMatch) {
                 videoId = youtubeMatch[1];
             }
-            return {
-                url: `https://www.youtube.com/embed/${encodeURIComponent(videoId)}`,
-                channel: videoId
-            };
+            channel = videoId;
+            // First stream has audio (mute=0), rest are muted (mute=1)
+            const muteParam = index === 0 ? 'mute=0' : 'mute=1';
+            baseUrl = `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?${muteParam}`;
+            break;
         
         default:
             return null;
     }
+    
+    return {
+        url: baseUrl,
+        channel: channel
+    };
+}
+
+// Handle audio toggle when clicking on a stream
+function setActiveAudio(index) {
+    // Update active audio stream
+    activeAudioStream = index;
+    
+    // Re-render to update audio states
+    renderStreams();
 }
 
 // Render all streams
@@ -278,6 +296,9 @@ function renderStreams() {
     streamContainer.innerHTML = '';
 
     if (streams.length === 0) {
+        // Reset active audio
+        activeAudioStream = null;
+        
         // Show empty state
         streamContainer.innerHTML = `
             <div class="empty-state">
@@ -291,6 +312,11 @@ function renderStreams() {
         return;
     }
 
+    // If active audio stream no longer exists, reset to first stream
+    if (activeAudioStream === null || activeAudioStream >= streams.length) {
+        activeAudioStream = 0;
+    }
+
     // Render each stream
     streams.forEach((stream, index) => {
         const streamCard = document.createElement('div');
@@ -301,7 +327,17 @@ function renderStreams() {
             streamCard.classList.add('new-stream');
         }
         
+        // Add audio-active class if this stream has audio
+        if (index === activeAudioStream) {
+            streamCard.classList.add('audio-active');
+        }
+        
         streamCard.dataset.index = index;
+        
+        // Audio indicator icon
+        const audioIcon = index === activeAudioStream ? '🔊' : '🔇';
+        const audioTitle = index === activeAudioStream ? 'Audio On (Click to mute)' : 'Audio Off (Click to unmute)';
+        
         streamCard.innerHTML = `
             <div class="stream-header">
                 <span class="platform-badge ${stream.platform}">
@@ -309,6 +345,7 @@ function renderStreams() {
                     ${stream.platform}
                 </span>
                 <span class="stream-url" title="${stream.channel}">${stream.channel}</span>
+                <button class="audio-toggle-btn" data-index="${index}" title="${audioTitle}">${audioIcon}</button>
                 <button class="remove-btn" data-index="${index}" title="Remove stream">×</button>
             </div>
             <div class="stream-iframe-container">
@@ -325,6 +362,15 @@ function renderStreams() {
         void streamCard.offsetWidth;
     });
 
+    // Attach audio toggle event listeners
+    document.querySelectorAll('.audio-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const index = parseInt(this.getAttribute('data-index'));
+            setActiveAudio(index);
+        });
+    });
+    
     // Attach remove event listeners
     document.querySelectorAll('.remove-btn').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -353,7 +399,8 @@ function addStream() {
         return;
     }
 
-    const embedData = getEmbedUrl(platform, input);
+    const newIndex = streams.length;
+    const embedData = getEmbedUrl(platform, input, newIndex);
     
     if (!embedData) {
         alert('Invalid input. Please check and try again.');
@@ -366,6 +413,11 @@ function addStream() {
         channel: embedData.channel,
         embedUrl: embedData.url
     });
+
+    // If this is the first stream, set it as active audio
+    if (streams.length === 1) {
+        activeAudioStream = 0;
+    }
 
     // Clear input
     streamInput.value = '';
@@ -396,10 +448,32 @@ function removeStream(index) {
         // Remove after animation completes
         setTimeout(() => {
             streams.splice(index, 1);
+            
+            // Update active audio stream
+            if (streams.length === 0) {
+                activeAudioStream = null;
+            } else if (activeAudioStream === index) {
+                // If we removed the active audio stream, set to first stream
+                activeAudioStream = 0;
+            } else if (activeAudioStream > index) {
+                // Adjust index if we removed a stream before the active one
+                activeAudioStream--;
+            }
+            
             renderStreams();
         }, 300);
     } else {
         streams.splice(index, 1);
+        
+        // Update active audio stream
+        if (streams.length === 0) {
+            activeAudioStream = null;
+        } else if (activeAudioStream === index) {
+            activeAudioStream = 0;
+        } else if (activeAudioStream > index) {
+            activeAudioStream--;
+        }
+        
         renderStreams();
     }
 }
@@ -411,6 +485,30 @@ shakeStyle.textContent = `
         0%, 100% { transform: translateX(0); }
         10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
         20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+    
+    .audio-toggle-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        padding: 0 5px;
+        transition: transform 0.2s ease;
+        line-height: 1;
+    }
+    
+    .audio-toggle-btn:hover {
+        transform: scale(1.2);
+    }
+    
+    .stream-wrapper.audio-active {
+        border-color: #ffd700;
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+    }
+    
+    .stream-wrapper.audio-active:hover {
+        border-color: #ffd700;
+        box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
     }
 `;
 document.head.appendChild(shakeStyle);
