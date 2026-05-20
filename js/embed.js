@@ -28,15 +28,15 @@ const EmbedBuilder = {
         
         switch (platform) {
             case 'twitch':
-                url = `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${CONFIG.twitchParent}`;
+                url = `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${CONFIG.twitchParent}&autoplay=true`;
                 break;
             
             case 'kick':
-                url = `https://player.kick.com/${encodeURIComponent(channel)}`;
+                url = `https://player.kick.com/${encodeURIComponent(channel)}?autoplay=true`;
                 break;
             
             case 'youtube':
-                url = `https://www.youtube.com/embed/${encodeURIComponent(channel)}`;
+                url = `https://www.youtube.com/embed/${encodeURIComponent(channel)}?autoplay=1&mute=1`;
                 break;
         }
         

@@ -241,6 +241,7 @@ body {
     width: 100%;
     max-width: 100%;
     align-content: start;
+    grid-auto-rows: min-content;
 }
 
 /* Custom scrollbar */
@@ -285,7 +286,7 @@ body {
 .stream-container.count-3 .stream-wrapper:first-child {
     grid-column: 1 / -1;
     justify-self: center;
-    max-width: 70%;
+    width: 70%;
 }
 
 .stream-container.count-odd {
@@ -303,12 +304,11 @@ body {
     border-radius: 8px;
     overflow: hidden;
     border: 1px solid #2d2d35;
-    transition: all 0.3s ease;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
     width: 100%;
     min-width: 0;
     min-height: 0;
-    height: fit-content;
-    contain: layout style;
+    align-self: start;
 }
 
 .stream-wrapper:hover {
@@ -535,8 +535,7 @@ body {
     
     .stream-container.count-3 .stream-wrapper:first-child {
         grid-column: 1;
-        justify-self: auto;
-        max-width: 100%;
+        width: 100%;
     }
 }
 

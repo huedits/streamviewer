@@ -14,6 +14,30 @@ const UI = {
         this.elements.addBtn = document.getElementById('addBtn');
         this.elements.streamContainer = document.getElementById('streamContainer');
         this.elements.controlBar = document.querySelector('.control-bar');
+        
+        // Prevent iframes from pausing on tab switch
+        this.handleVisibilityChange();
+    },
+    
+    // Handle page visibility changes to keep iframes playing
+    handleVisibilityChange() {
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                // Page is visible again - refresh iframes that may have paused
+                const iframes = this.elements.streamContainer.querySelectorAll('iframe');
+                iframes.forEach(iframe => {
+                    const src = iframe.src;
+                    if (src && !src.includes('autoplay')) {
+                        // Add autoplay parameter if missing
+                        if (src.includes('twitch.tv')) {
+                            iframe.src = src.includes('autoplay=true') ? src : src + '&autoplay=true';
+                        } else if (src.includes('youtube.com')) {
+                            iframe.src = src.includes('autoplay=1') ? src : src + '&autoplay=1';
+                        }
+                    }
+                });
+            }
+        });
     },
     
     // Create stream card HTML
@@ -28,6 +52,7 @@ const UI = {
                     src="${streamData.embedUrl}" 
                     allowfullscreen="true"
                     scrolling="no"
+                    allow="autoplay; fullscreen"
                 ></iframe>
             </div>
             <button class="remove-btn" data-stream-id="${streamData.id}" title="Remove stream">×</button>
