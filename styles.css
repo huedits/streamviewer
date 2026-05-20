@@ -202,14 +202,45 @@ body {
     opacity: 0;
 }
 
-/* Stream Grid */
+/* Stream Grid - Base */
 .stream-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
     gap: 15px;
     padding: 20px;
+    width: 100%;
     min-height: calc(100vh - 80px);
     transition: all 0.3s ease;
+    align-items: start;
+}
+
+/* Single Column Layout */
+.stream-container.layout-single {
+    grid-template-columns: 1fr;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Double Column Layout */
+.stream-container.layout-double {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 100%;
+}
+
+/* Triple Column Layout */
+.stream-container.layout-triple {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 100%;
+}
+
+/* Auto Grid Layout - Responsive based on container width */
+.stream-container.layout-grid {
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    max-width: 100%;
+}
+
+/* When there are fewer items, center them */
+.stream-container.layout-grid.few-items {
+    justify-content: center;
 }
 
 /* Stream Wrapper with entrance/exit animations */
@@ -223,6 +254,24 @@ body {
     display: flex;
     flex-direction: column;
     animation: fadeInScale 0.4s ease;
+    width: 100%;
+}
+
+/* Maintain 16:9 aspect ratio for the iframe container */
+.stream-iframe-container {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%; /* 16:9 Aspect Ratio */
+    background-color: #000;
+}
+
+.stream-iframe-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
 }
 
 @keyframes fadeInScale {
@@ -349,22 +398,6 @@ body {
     transform: rotate(90deg);
 }
 
-.stream-iframe-container {
-    flex: 1;
-    min-height: 300px;
-    background-color: #000;
-    position: relative;
-}
-
-.stream-iframe-container iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-    position: absolute;
-    top: 0;
-    left: 0;
-}
-
 /* Layout controls */
 .layout-controls {
     display: flex;
@@ -462,9 +495,37 @@ body {
 }
 
 /* Responsive adjustments */
-@media (max-width: 900px) {
-    .stream-container {
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+@media (max-width: 1400px) {
+    .stream-container.layout-grid {
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    }
+    
+    .stream-container.layout-triple {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 1100px) {
+    .stream-container.layout-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+    
+    .stream-container.layout-triple {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .stream-container.layout-double {
+        grid-template-columns: 1fr;
+    }
+    
+    .stream-container.layout-triple {
+        grid-template-columns: 1fr;
+    }
+    
+    .stream-container.layout-grid {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -480,7 +541,8 @@ body {
     }
     
     .stream-container {
-        grid-template-columns: 1fr;
+        padding: 10px;
+        gap: 10px;
     }
     
     .custom-dropdown {

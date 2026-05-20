@@ -170,27 +170,46 @@ function addLayoutControls() {
 
 // Update layout based on current selection
 function updateLayout() {
-    switch(currentLayout) {
-        case 'single':
+    // Remove all layout classes
+    streamContainer.classList.remove('layout-single', 'layout-double', 'layout-triple', 'layout-grid', 'few-items');
+    
+    // Add the current layout class
+    streamContainer.classList.add(`layout-${currentLayout}`);
+    
+    // For grid layout, add few-items class when there are fewer streams
+    if (currentLayout === 'grid' && streams.length <= 2) {
+        streamContainer.classList.add('few-items');
+    }
+    
+    // For grid layout, adjust min-width based on number of streams
+    if (currentLayout === 'grid') {
+        if (streams.length === 1) {
             streamContainer.style.gridTemplateColumns = '1fr';
-            break;
-        case 'double':
+            streamContainer.style.maxWidth = '1400px';
+            streamContainer.style.margin = '0 auto';
+        } else if (streams.length === 2) {
             streamContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
-            break;
-        case 'triple':
+            streamContainer.style.maxWidth = '100%';
+            streamContainer.style.margin = '0';
+        } else if (streams.length === 3) {
             streamContainer.style.gridTemplateColumns = 'repeat(3, 1fr)';
-            break;
-        case 'grid':
-        default:
-            // Responsive auto-fit grid
-            if (streams.length === 1) {
-                streamContainer.style.gridTemplateColumns = '1fr';
-            } else if (streams.length === 2) {
-                streamContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
-            } else {
-                streamContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(400px, 1fr))';
-            }
-            break;
+            streamContainer.style.maxWidth = '100%';
+            streamContainer.style.margin = '0';
+        } else if (streams.length === 4) {
+            streamContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
+            streamContainer.style.maxWidth = '100%';
+            streamContainer.style.margin = '0';
+        } else {
+            streamContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(400px, 1fr))';
+            streamContainer.style.maxWidth = '100%';
+            streamContainer.style.margin = '0';
+        }
+    } else if (currentLayout === 'single') {
+        streamContainer.style.maxWidth = '1400px';
+        streamContainer.style.margin = '0 auto';
+    } else {
+        streamContainer.style.maxWidth = '100%';
+        streamContainer.style.margin = '0';
     }
 }
 
@@ -252,7 +271,6 @@ function getEmbedUrl(platform, channelOrId, isFirst) {
             }
             const parent = getTwitchParent();
             channel = twitchChannel;
-            // First stream has audio, rest are muted
             const muted = isFirst ? 'false' : 'true';
             baseUrl = `https://player.twitch.tv/?channel=${encodeURIComponent(twitchChannel)}&parent=${parent}&muted=${muted}`;
             break;
@@ -274,7 +292,6 @@ function getEmbedUrl(platform, channelOrId, isFirst) {
                 videoId = youtubeMatch[1];
             }
             channel = videoId;
-            // First stream has audio (mute=0), rest are muted (mute=1)
             const muteParam = isFirst ? 'mute=0' : 'mute=1';
             baseUrl = `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?${muteParam}`;
             break;
@@ -326,37 +343,6 @@ function createStreamCard(streamData, index, isNew) {
     `;
     
     return streamCard;
-}
-
-// Attach event listeners to a stream card
-function attachStreamEventListeners(streamCard) {
-    const streamId = parseInt(streamCard.dataset.streamId);
-    
-    // Audio toggle button
-    const audioBtn = streamCard.querySelector('.audio-toggle-btn');
-    if (audioBtn) {
-        // Remove old listener by cloning
-        const newAudioBtn = audioBtn.cloneNode(true);
-        audioBtn.parentNode.replaceChild(newAudioBtn, audioBtn);
-        
-        newAudioBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            setActiveAudio(streamId);
-        });
-    }
-    
-    // Remove button
-    const removeBtn = streamCard.querySelector('.remove-btn');
-    if (removeBtn) {
-        // Remove old listener by cloning
-        const newRemoveBtn = removeBtn.cloneNode(true);
-        removeBtn.parentNode.replaceChild(newRemoveBtn, removeBtn);
-        
-        newRemoveBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            removeStream(streamId);
-        });
-    }
 }
 
 // Update audio indicators on all streams
@@ -458,6 +444,29 @@ function showNotification(message, type = 'error') {
     }, 3000);
 }
 
+// Handle click events using event delegation
+function handleStreamClick(e) {
+    // Find the closest button that was clicked
+    const removeBtn = e.target.closest('.remove-btn');
+    const audioBtn = e.target.closest('.audio-toggle-btn');
+    
+    if (removeBtn) {
+        e.stopPropagation();
+        const streamId = parseInt(removeBtn.dataset.streamId);
+        if (streamId) {
+            removeStream(streamId);
+        }
+    }
+    
+    if (audioBtn) {
+        e.stopPropagation();
+        const streamId = parseInt(audioBtn.dataset.streamId);
+        if (streamId) {
+            setActiveAudio(streamId);
+        }
+    }
+}
+
 // Add a new stream
 function addStream() {
     const platform = platformSelect.value;
@@ -511,9 +520,6 @@ function addStream() {
     // Create and append the new stream card
     const newCard = createStreamCard(streamData, streams.length - 1, streams.length > 1);
     streamContainer.appendChild(newCard);
-    
-    // Attach event listeners immediately
-    attachStreamEventListeners(newCard);
     
     // Trigger reflow for animation
     void newCard.offsetWidth;
@@ -651,6 +657,9 @@ additionalStyles.textContent = `
     }
 `;
 document.head.appendChild(additionalStyles);
+
+// Use event delegation for stream container clicks
+streamContainer.addEventListener('click', handleStreamClick);
 
 // Event Listeners
 addBtn.addEventListener('click', addStream);
