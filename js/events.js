@@ -35,7 +35,6 @@ const EventHandlers = {
         const removeAllBtn = document.getElementById('removeAllBtn');
         
         if (removeAllBtn) {
-            // Disable button initially
             this.updateRemoveAllButton();
             
             removeAllBtn.addEventListener('click', () => {
@@ -54,7 +53,6 @@ const EventHandlers = {
                 this.removeStream(lastStream.id);
             }
             
-            // Ctrl+Shift+Z to remove all
             if (e.ctrlKey && e.shiftKey && e.key === 'Z' && StreamState.getCount() > 0) {
                 e.preventDefault();
                 this.confirmRemoveAll();
@@ -102,6 +100,9 @@ const EventHandlers = {
     },
     
     removeAllStreams() {
+        // Destroy all players
+        EmbedManager.destroyAll();
+        
         const allCards = UI.elements.streamContainer.querySelectorAll('.stream-wrapper');
         
         if (allCards.length === 0) {
@@ -110,19 +111,18 @@ const EventHandlers = {
             return;
         }
         
-        // Animate all cards out
         allCards.forEach((card, index) => {
             setTimeout(() => {
-                card.classList.add('removing');
-            }, index * 50); // Stagger the animations
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.8)';
+                card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            }, index * 50);
         });
         
-        // Remove all after animations complete
         const lastCard = allCards[allCards.length - 1];
-        const handleAnimationEnd = () => {
-            lastCard.removeEventListener('animationend', handleAnimationEnd);
+        const handleTransitionEnd = () => {
+            lastCard.removeEventListener('transitionend', handleTransitionEnd);
             
-            // Clear all cards
             UI.elements.streamContainer.innerHTML = '';
             StreamState.streams = [];
             UI.showEmptyState();
@@ -130,9 +130,8 @@ const EventHandlers = {
             this.updateRemoveAllButton();
         };
         
-        lastCard.addEventListener('animationend', handleAnimationEnd);
+        lastCard.addEventListener('transitionend', handleTransitionEnd);
         
-        // Fallback
         setTimeout(() => {
             if (UI.elements.streamContainer.querySelector('.stream-wrapper')) {
                 UI.elements.streamContainer.innerHTML = '';
@@ -158,11 +157,7 @@ const EventHandlers = {
     updateRemoveAllButton() {
         const removeAllBtn = document.getElementById('removeAllBtn');
         if (removeAllBtn) {
-            if (StreamState.getCount() === 0) {
-                removeAllBtn.disabled = true;
-            } else {
-                removeAllBtn.disabled = false;
-            }
+            removeAllBtn.disabled = StreamState.getCount() === 0;
         }
     }
 };

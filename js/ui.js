@@ -1,6 +1,5 @@
 // UI Components and Rendering
 const UI = {
-    // DOM Elements
     elements: {
         streamInput: null,
         addBtn: null,
@@ -8,38 +7,13 @@ const UI = {
         controlBar: null
     },
     
-    // Initialize DOM references
     init() {
         this.elements.streamInput = document.getElementById('streamInput');
         this.elements.addBtn = document.getElementById('addBtn');
         this.elements.streamContainer = document.getElementById('streamContainer');
         this.elements.controlBar = document.querySelector('.control-bar');
-        
-        // Handle visibility change to keep iframes alive
-        this.handleVisibilityChange();
     },
     
-    // Prevent iframes from pausing when tab is hidden
-    handleVisibilityChange() {
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden) {
-                // Page is visible again
-                const iframes = this.elements.streamContainer.querySelectorAll('iframe');
-                iframes.forEach(iframe => {
-                    // Briefly touch the iframe to prevent pause
-                    const currentSrc = iframe.src;
-                    if (currentSrc) {
-                        // Force iframe to stay active
-                        iframe.style.display = 'none';
-                        iframe.offsetHeight; // Force reflow
-                        iframe.style.display = '';
-                    }
-                });
-            }
-        });
-    },
-    
-    // Create stream card HTML
     createStreamCard(streamData) {
         const streamCard = document.createElement('div');
         streamCard.className = 'stream-wrapper';
@@ -47,27 +21,30 @@ const UI = {
         
         streamCard.innerHTML = `
             <div class="stream-iframe-container">
-                <iframe 
-                    src="${streamData.embedUrl}" 
-                    allowfullscreen="true"
-                    scrolling="no"
-                    allow="autoplay; fullscreen"
-                ></iframe>
+                <!-- Player container will be appended here -->
             </div>
             <button class="remove-btn" data-stream-id="${streamData.id}" title="Remove stream">×</button>
         `;
         
+        // Initialize the player
+        const iframeContainer = streamCard.querySelector('.stream-iframe-container');
+        const playerContainer = EmbedManager.createPlayerContainer(streamData.id);
+        iframeContainer.appendChild(playerContainer);
+        
+        // Initialize player after DOM insertion
+        requestAnimationFrame(() => {
+            EmbedManager.initPlayer(streamData, playerContainer);
+        });
+        
         return streamCard;
     },
     
-    // Add stream card to container (without touching existing iframes)
     addStreamCard(streamData) {
         this.removeEmptyState();
         
         const card = this.createStreamCard(streamData);
         this.elements.streamContainer.appendChild(card);
         
-        // Only update grid class, never touch existing cards
         this.updateGridClass();
         
         requestAnimationFrame(() => {
@@ -77,11 +54,13 @@ const UI = {
         return card;
     },
     
-    // Remove stream card with animation
     removeStreamCard(streamId) {
         const card = this.elements.streamContainer.querySelector(`.stream-wrapper[data-stream-id="${streamId}"]`);
         
         if (!card) return;
+        
+        // Destroy the player
+        EmbedManager.destroyPlayer(streamId);
         
         card.style.opacity = '0';
         card.style.transform = 'scale(0.8)';
@@ -113,12 +92,10 @@ const UI = {
         }, 500);
     },
     
-    // Update grid class based on count
     updateGridClass() {
         const container = this.elements.streamContainer;
         const count = StreamState.getCount();
         
-        // Remove all count classes
         container.classList.remove('count-1', 'count-2', 'count-odd', 'count-even');
         
         if (count === 0) return;
@@ -128,21 +105,21 @@ const UI = {
         } else if (count === 2) {
             container.classList.add('count-2');
         } else if (count % 2 === 1) {
-            // All odd counts (3, 5, 7, etc): first card centered at 50%, rest 2 columns
             container.classList.add('count-odd');
         } else {
-            // All even counts (4, 6, 8, etc): all 2 columns
             container.classList.add('count-even');
         }
     },
     
-    // Show/hide empty state
     removeEmptyState() {
         const emptyState = this.elements.streamContainer.querySelector('.empty-state');
         if (emptyState) emptyState.remove();
     },
     
     showEmptyState() {
+        // Destroy all players first
+        EmbedManager.destroyAll();
+        
         this.elements.streamContainer.innerHTML = `
             <div class="empty-state">
                 <div class="icon">📺</div>
@@ -153,7 +130,6 @@ const UI = {
         this.elements.streamContainer.classList.remove('count-1', 'count-2', 'count-odd', 'count-even');
     },
     
-    // Update stream count badge
     updateStreamCount() {
         const existingBadge = document.querySelector('.stream-count');
         if (existingBadge) existingBadge.remove();
@@ -167,7 +143,6 @@ const UI = {
         }
     },
     
-    // Show confirmation dialog
     showConfirmDialog(message, onConfirm) {
         const overlay = document.createElement('div');
         overlay.className = 'confirm-overlay';
@@ -208,7 +183,6 @@ const UI = {
         document.addEventListener('keydown', escHandler);
     },
     
-    // Show notification
     showNotification(message, type = 'error') {
         const existing = document.querySelector('.notification-toast');
         if (existing) existing.remove();
@@ -238,7 +212,6 @@ const UI = {
         }, 3000);
     },
     
-    // Shake input
     shakeInput() {
         const input = this.elements.streamInput;
         input.style.animation = 'shake 0.5s ease';
