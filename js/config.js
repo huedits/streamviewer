@@ -1,7 +1,7 @@
 // Configuration and Constants
 const CONFIG = {
     // Application version
-    version: '1.2.1',
+    version: '2.0.0',
     
     // Twitch embed parent domain - hardcoded for GitHub Pages
     twitchParent: 'huedits.github.io',

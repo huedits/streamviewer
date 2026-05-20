@@ -28,12 +28,32 @@
         </button>
     </div>
 
-    <!-- Stream Grid -->
-    <div class="stream-container" id="streamContainer">
-        <div class="empty-state">
-            <div class="icon">📺</div>
-            <p>No streams added yet</p>
-            <p>Select a platform, enter a <span>channel name</span> and click <span>+</span></p>
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <!-- Stream Grid -->
+        <div class="stream-container" id="streamContainer">
+            <div class="empty-state">
+                <div class="icon">📺</div>
+                <p>No streams added yet</p>
+                <p>Select a platform, enter a <span>channel name</span> and click <span>+</span></p>
+            </div>
+        </div>
+
+        <!-- Chat Panel -->
+        <div class="chat-panel" id="chatPanel">
+            <div class="chat-header">
+                <span class="chat-title">Chat</span>
+                <button class="chat-close-btn" id="chatCloseBtn" title="Close chat">×</button>
+            </div>
+            <div class="chat-tabs" id="chatTabs">
+                <!-- Chat tabs will be added dynamically -->
+            </div>
+            <div class="chat-container" id="chatContainer">
+                <div class="chat-empty">
+                    <span>💬</span>
+                    <p>Select a stream to view chat</p>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -50,6 +70,7 @@
     <script src="js/config.js"></script>
     <script src="js/state.js"></script>
     <script src="js/embed.js"></script>
+    <script src="js/chat.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/dropdown.js"></script>
     <script src="js/events.js"></script>

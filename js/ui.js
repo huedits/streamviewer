@@ -19,6 +19,9 @@ const UI = {
         streamCard.className = 'stream-wrapper';
         streamCard.setAttribute('data-stream-id', streamData.id);
         
+        const isActiveChat = ChatManager.activeChatId === streamData.id;
+        const chatIcon = isActiveChat ? '💬' : '💭';
+        
         streamCard.innerHTML = `
             <div class="stream-iframe-container">
                 <iframe 
@@ -28,6 +31,7 @@ const UI = {
                     allow="autoplay; fullscreen"
                 ></iframe>
             </div>
+            <button class="chat-toggle-btn ${isActiveChat ? 'active' : ''}" data-stream-id="${streamData.id}" title="Toggle chat">${chatIcon}</button>
             <button class="remove-btn" data-stream-id="${streamData.id}" title="Remove stream">×</button>
         `;
         
@@ -39,6 +43,9 @@ const UI = {
         
         const card = this.createStreamCard(streamData);
         this.elements.streamContainer.appendChild(card);
+        
+        // Add chat tab
+        ChatManager.addChatTab(streamData);
         
         this.updateGridClass();
         
@@ -53,6 +60,9 @@ const UI = {
         const card = this.elements.streamContainer.querySelector(`.stream-wrapper[data-stream-id="${streamId}"]`);
         
         if (!card) return;
+        
+        // Remove chat tab
+        ChatManager.removeChatTab(streamId);
         
         card.style.opacity = '0';
         card.style.transform = 'scale(0.8)';

@@ -2,6 +2,7 @@
 const App = {
     init() {
         UI.init();
+        ChatManager.init();
         this.displayVersion();
         Dropdown.init();
         EventHandlers.init();
