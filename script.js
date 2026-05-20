@@ -1,5 +1,6 @@
 // State to track added streams
 let streams = [];
+let currentLayout = 'single'; // Default to single column layout
 
 // DOM Elements
 let platformSelect = document.getElementById('platformSelect');
@@ -122,19 +123,30 @@ function addLayoutControls() {
     const layoutControls = document.createElement('div');
     layoutControls.className = 'layout-controls';
     layoutControls.innerHTML = `
-        <button class="layout-btn active" data-layout="auto" title="Auto Layout">
+        <button class="layout-btn active" data-layout="single" title="Single Column">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zm10-10h8v8h-8V3zm0 10h8v8h-8v-8z"/>
-            </svg>
-        </button>
-        <button class="layout-btn" data-layout="single" title="Single Column">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M4 5h16v14H4V5z"/>
+                <rect x="4" y="4" width="16" height="16" rx="2"/>
             </svg>
         </button>
         <button class="layout-btn" data-layout="double" title="Two Columns">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M4 5h7v14H4V5zm9 0h7v14h-7V5z"/>
+                <rect x="3" y="4" width="8" height="16" rx="2"/>
+                <rect x="13" y="4" width="8" height="16" rx="2"/>
+            </svg>
+        </button>
+        <button class="layout-btn" data-layout="triple" title="Three Columns">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="2" y="4" width="5" height="16" rx="2"/>
+                <rect x="9.5" y="4" width="5" height="16" rx="2"/>
+                <rect x="17" y="4" width="5" height="16" rx="2"/>
+            </svg>
+        </button>
+        <button class="layout-btn" data-layout="grid" title="Auto Grid">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="3" y="3" width="8" height="8" rx="1"/>
+                <rect x="13" y="3" width="8" height="8" rx="1"/>
+                <rect x="3" y="13" width="8" height="8" rx="1"/>
+                <rect x="13" y="13" width="8" height="8" rx="1"/>
             </svg>
         </button>
     `;
@@ -148,20 +160,36 @@ function addLayoutControls() {
             this.classList.add('active');
             
             const layout = this.dataset.layout;
-            switch(layout) {
-                case 'single':
-                    streamContainer.style.gridTemplateColumns = '1fr';
-                    break;
-                case 'double':
-                    streamContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
-                    break;
-                case 'auto':
-                default:
-                    streamContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(400px, 1fr))';
-                    break;
-            }
+            currentLayout = layout;
+            updateLayout();
         });
     });
+}
+
+// Update layout based on current selection
+function updateLayout() {
+    switch(currentLayout) {
+        case 'single':
+            streamContainer.style.gridTemplateColumns = '1fr';
+            break;
+        case 'double':
+            streamContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
+            break;
+        case 'triple':
+            streamContainer.style.gridTemplateColumns = 'repeat(3, 1fr)';
+            break;
+        case 'grid':
+        default:
+            // Responsive auto-fit grid
+            if (streams.length === 1) {
+                streamContainer.style.gridTemplateColumns = '1fr';
+            } else if (streams.length === 2) {
+                streamContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
+            } else {
+                streamContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(400px, 1fr))';
+            }
+            break;
+    }
 }
 
 // Update stream count display
@@ -181,6 +209,24 @@ function updateStreamCount() {
     }
 }
 
+// Get the correct parent for Twitch embed
+function getTwitchParent() {
+    const hostname = window.location.hostname;
+    
+    // If running on localhost
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return 'localhost';
+    }
+    
+    // If running on GitHub Pages
+    if (hostname.includes('github.io')) {
+        return hostname; // Returns full domain like 'huedits.github.io'
+    }
+    
+    // Default fallback
+    return hostname || 'localhost';
+}
+
 // Embed URL builders for each platform
 function getEmbedUrl(platform, channelOrId) {
     const input = channelOrId.trim();
@@ -192,8 +238,10 @@ function getEmbedUrl(platform, channelOrId) {
             if (twitchMatch) {
                 twitchChannel = twitchMatch[1];
             }
+            const parent = getTwitchParent();
+            console.log('Twitch parent:', parent); // Debug log
             return {
-                url: `https://player.twitch.tv/?channel=${encodeURIComponent(twitchChannel)}&parent=huedits.github.io/streamviewer`,
+                url: `https://player.twitch.tv/?channel=${encodeURIComponent(twitchChannel)}&parent=${parent}`,
                 channel: twitchChannel
             };
         
@@ -238,6 +286,7 @@ function renderStreams() {
                 <p>Select a platform, enter a <span>channel name</span> and click <span>+</span></p>
             </div>
         `;
+        updateLayout();
         updateStreamCount();
         return;
     }
@@ -284,6 +333,7 @@ function renderStreams() {
         });
     });
     
+    updateLayout();
     updateStreamCount();
 }
 
@@ -385,4 +435,5 @@ document.addEventListener('keydown', function(e) {
 // Initialize custom dropdown, layout controls, and render
 createCustomDropdown();
 addLayoutControls();
+updateLayout(); // Start with single column layout
 renderStreams();
