@@ -193,7 +193,7 @@ function getEmbedUrl(platform, channelOrId) {
                 twitchChannel = twitchMatch[1];
             }
             return {
-                url: `https://player.twitch.tv/?channel=${encodeURIComponent(twitchChannel)}&parent=huedits.github.io`,
+                url: `https://player.twitch.tv/?channel=${encodeURIComponent(twitchChannel)}&parent=huedits.github.io/streamviewer`,
                 channel: twitchChannel
             };
         
