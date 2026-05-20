@@ -18,7 +18,7 @@ const platformIcons = {
     </svg>`,
     
     kick: `<svg class="platform-icon" viewBox="0 0 24 24" fill="#53fc18">
-    <path d="M8 3v18M8 12l12-9M8 12l12 9" stroke="#53fc18" stroke-width="2" fill="none"/>
+        <path d="M8 3v18M8 12l12-9M8 12l12 9" stroke="#53fc18" stroke-width="2" fill="none"/>
     </svg>`,
     
     youtube: `<svg class="platform-icon" viewBox="0 0 24 24" fill="#ff0000">
@@ -229,6 +229,14 @@ function getTwitchParent() {
     return hostname || 'localhost';
 }
 
+// Check for duplicate streams
+function isDuplicateStream(platform, channel) {
+    return streams.some(stream => 
+        stream.platform === platform && 
+        stream.channel.toLowerCase() === channel.toLowerCase()
+    );
+}
+
 // Build embed URL with audio parameters
 function getEmbedUrl(platform, channelOrId, isFirst) {
     const input = channelOrId.trim();
@@ -317,19 +325,38 @@ function createStreamCard(streamData, index, isNew) {
         </div>
     `;
     
-    // Add event listeners directly to the card
-    const audioBtn = streamCard.querySelector('.audio-toggle-btn');
-    audioBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        setActiveAudio(streamData.id);
-    });
-    
-    const removeBtn = streamCard.querySelector('.remove-btn');
-    removeBtn.addEventListener('click', function() {
-        removeStream(streamData.id);
-    });
-    
     return streamCard;
+}
+
+// Attach event listeners to a stream card
+function attachStreamEventListeners(streamCard) {
+    const streamId = parseInt(streamCard.dataset.streamId);
+    
+    // Audio toggle button
+    const audioBtn = streamCard.querySelector('.audio-toggle-btn');
+    if (audioBtn) {
+        // Remove old listener by cloning
+        const newAudioBtn = audioBtn.cloneNode(true);
+        audioBtn.parentNode.replaceChild(newAudioBtn, audioBtn);
+        
+        newAudioBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            setActiveAudio(streamId);
+        });
+    }
+    
+    // Remove button
+    const removeBtn = streamCard.querySelector('.remove-btn');
+    if (removeBtn) {
+        // Remove old listener by cloning
+        const newRemoveBtn = removeBtn.cloneNode(true);
+        removeBtn.parentNode.replaceChild(newRemoveBtn, removeBtn);
+        
+        newRemoveBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            removeStream(streamId);
+        });
+    }
 }
 
 // Update audio indicators on all streams
@@ -395,6 +422,42 @@ function showEmptyState() {
     `;
 }
 
+// Show notification toast
+function showNotification(message, type = 'error') {
+    // Remove existing notification
+    const existingNotification = document.querySelector('.notification-toast');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+    
+    const notification = document.createElement('div');
+    notification.className = `notification-toast ${type}`;
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: ${type === 'error' ? '#ff4444' : '#53fc18'};
+        color: ${type === 'error' ? 'white' : '#0e0e10'};
+        padding: 12px 20px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: bold;
+        z-index: 10000;
+        animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 3000);
+}
+
 // Add a new stream
 function addStream() {
     const platform = platformSelect.value;
@@ -411,11 +474,18 @@ function addStream() {
         return;
     }
 
-    const isFirst = streams.length === 0;
-    const embedData = getEmbedUrl(platform, input, isFirst);
+    const embedData = getEmbedUrl(platform, input, streams.length === 0);
     
     if (!embedData) {
         alert('Invalid input. Please check and try again.');
+        return;
+    }
+
+    // Check for duplicate streams
+    if (isDuplicateStream(platform, embedData.channel)) {
+        showNotification(`This ${platform} stream is already added!`, 'error');
+        streamInput.focus();
+        streamInput.select();
         return;
     }
 
@@ -441,6 +511,9 @@ function addStream() {
     // Create and append the new stream card
     const newCard = createStreamCard(streamData, streams.length - 1, streams.length > 1);
     streamContainer.appendChild(newCard);
+    
+    // Attach event listeners immediately
+    attachStreamEventListeners(newCard);
     
     // Trigger reflow for animation
     void newCard.offsetWidth;
@@ -473,8 +546,12 @@ function removeStream(streamId) {
         streamCard.classList.add('removing');
         
         // Remove after animation completes
-        streamCard.addEventListener('animationend', function() {
-            streamCard.remove();
+        const handleAnimationEnd = function() {
+            streamCard.removeEventListener('animationend', handleAnimationEnd);
+            
+            if (streamCard.parentNode) {
+                streamCard.remove();
+            }
             
             // Remove from array
             streams.splice(streamIndex, 1);
@@ -496,7 +573,9 @@ function removeStream(streamId) {
             
             updateLayout();
             updateStreamCount();
-        });
+        };
+        
+        streamCard.addEventListener('animationend', handleAnimationEnd);
     } else {
         // Fallback if card not found
         streams.splice(streamIndex, 1);
@@ -510,6 +589,7 @@ function removeStream(streamId) {
             } else if (activeAudioStream > streamIndex) {
                 activeAudioStream--;
             }
+            updateAudioIndicators();
         }
         
         updateLayout();
@@ -517,13 +597,33 @@ function removeStream(streamId) {
     }
 }
 
-// Add shake animation for invalid input
-const shakeStyle = document.createElement('style');
-shakeStyle.textContent = `
+// Add notification and shake animations
+const additionalStyles = document.createElement('style');
+additionalStyles.textContent = `
     @keyframes shake {
         0%, 100% { transform: translateX(0); }
         10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
         20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+    
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+        }
+        to {
+            opacity: 0;
+        }
     }
     
     .audio-toggle-btn {
@@ -550,7 +650,7 @@ shakeStyle.textContent = `
         box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
     }
 `;
-document.head.appendChild(shakeStyle);
+document.head.appendChild(additionalStyles);
 
 // Event Listeners
 addBtn.addEventListener('click', addStream);
