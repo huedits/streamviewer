@@ -199,7 +199,17 @@ const UI = {
             container.style.maxWidth = '100%';
             container.style.margin = '0';
         }
-    },
+        
+        // Auto-scroll to bottom when new stream is added
+        if (StreamState.getCount() > 0) {
+            setTimeout(() => {
+                const lastCard = container.querySelector('.stream-wrapper:last-child');
+                if (lastCard) {
+                    lastCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }, 100);
+        }
+},
     
     // Update stream count badge
     updateStreamCount() {

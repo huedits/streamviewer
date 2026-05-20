@@ -4,12 +4,17 @@
     box-sizing: border-box;
 }
 
+html, body {
+    height: 100%;
+    overflow: hidden; /* Prevent body scrollbar */
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #0e0e10;
     color: #efeff1;
-    min-height: 100vh;
-    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Header / Control Bar */
@@ -21,10 +26,8 @@ body {
     gap: 10px;
     border-bottom: 2px solid #2d2d35;
     flex-wrap: wrap;
-    position: sticky;
-    top: 0;
+    flex-shrink: 0; /* Prevent shrinking */
     z-index: 100;
-    backdrop-filter: blur(10px);
 }
 
 /* Custom Dropdown Styling */
@@ -202,15 +205,52 @@ body {
     opacity: 0;
 }
 
-/* Stream Grid - Base */
+/* Main content area - takes remaining height */
+.main-content {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* Important for Firefox */
+}
+
+/* Stream Grid - Scrollable */
 .stream-container {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
     display: grid;
     gap: 15px;
     padding: 20px;
     width: 100%;
-    min-height: calc(100vh - 80px);
     transition: all 0.3s ease;
     align-items: start;
+    align-content: start;
+}
+
+/* Custom scrollbar for stream container */
+.stream-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.stream-container::-webkit-scrollbar-track {
+    background: #1f1f23;
+    border-radius: 4px;
+}
+
+.stream-container::-webkit-scrollbar-thumb {
+    background: #3a3a3d;
+    border-radius: 4px;
+}
+
+.stream-container::-webkit-scrollbar-thumb:hover {
+    background: #9147ff;
+}
+
+/* Firefox scrollbar */
+.stream-container {
+    scrollbar-width: thin;
+    scrollbar-color: #3a3a3d #1f1f23;
 }
 
 /* Single Column Layout */
@@ -331,6 +371,7 @@ body {
     padding: 10px 15px;
     background-color: #1f1f23;
     border-bottom: 1px solid #2d2d35;
+    flex-shrink: 0;
 }
 
 .platform-badge {
@@ -442,6 +483,8 @@ body {
     padding: 60px;
     text-align: center;
     animation: fadeIn 0.5s ease;
+    height: 100%;
+    min-height: 300px;
 }
 
 @keyframes fadeIn {
@@ -492,6 +535,48 @@ body {
     to {
         transform: scale(1);
     }
+}
+
+/* Footer */
+.site-footer {
+    background-color: #18181b;
+    border-top: 1px solid #2d2d35;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0; /* Prevent shrinking */
+}
+
+.footer-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: #aaa;
+}
+
+.footer-text {
+    font-weight: 500;
+}
+
+.footer-separator {
+    color: #3a3a3d;
+}
+
+.footer-version {
+    color: #9147ff;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    background-color: #1f1f23;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.footer-version:hover {
+    background-color: #2d2d35;
 }
 
 /* Responsive adjustments */
@@ -548,46 +633,4 @@ body {
     .custom-dropdown {
         width: 100%;
     }
-}
-
-/* Footer */
-.site-footer {
-    background-color: #18181b;
-    border-top: 1px solid #2d2d35;
-    padding: 15px 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: auto;
-}
-
-.footer-content {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 13px;
-    color: #aaa;
-}
-
-.footer-text {
-    font-weight: 500;
-}
-
-.footer-separator {
-    color: #3a3a3d;
-}
-
-.footer-version {
-    color: #9147ff;
-    font-weight: bold;
-    font-family: 'Courier New', monospace;
-    background-color: #1f1f23;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-}
-
-.footer-version:hover {
-    background-color: #2d2d35;
-    cursor: default;
 }

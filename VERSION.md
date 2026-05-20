@@ -14,7 +14,5 @@
 
 ---
 
-### How to Update Version
-1. Change `CONFIG.version` in `js/config.js`
-2. Update this VERSION.md file with changes
-3. The footer will automatically display the new version
+## v1.0.1
+- Fixed screen height
