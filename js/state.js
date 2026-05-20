@@ -2,7 +2,6 @@
 const StreamState = {
     streams: [],
     streamCounter: 0,
-    currentLayout: CONFIG.defaultLayout,
     
     // Add a stream
     addStream(streamData) {
@@ -26,11 +25,6 @@ const StreamState = {
     // Get stream by ID
     getStream(streamId) {
         return this.streams.find(s => s.id === streamId);
-    },
-    
-    // Get stream index by ID
-    getStreamIndex(streamId) {
-        return this.streams.findIndex(s => s.id === streamId);
     },
     
     // Check for duplicate

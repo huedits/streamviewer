@@ -57,10 +57,10 @@ const UI = {
         const card = this.createStreamCard(streamData, index);
         this.elements.streamContainer.appendChild(card);
         
-        // Trigger reflow for animation
+        this.updateGridClass();
+        
         void card.offsetWidth;
         
-        // Scroll to new card
         setTimeout(() => {
             card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }, 100);
@@ -89,20 +89,40 @@ const UI = {
             
             if (StreamState.getCount() === 0) {
                 this.showEmptyState();
+            } else {
+                this.updateGridClass();
             }
             
-            this.updateLayout();
             this.updateStreamCount();
         };
         
         card.addEventListener('animationend', handleAnimationEnd);
         
-        // Fallback timeout
         setTimeout(() => {
             if (card.parentNode) {
                 handleAnimationEnd();
             }
         }, 500);
+    },
+    
+    // Update grid class based on count
+    updateGridClass() {
+        const container = this.elements.streamContainer;
+        const count = StreamState.getCount();
+        
+        container.classList.remove('count-1', 'count-2', 'count-odd', 'count-even');
+        
+        if (count === 0) return;
+        
+        if (count === 1) {
+            container.classList.add('count-1');
+        } else if (count === 2) {
+            container.classList.add('count-2');
+        } else if (count % 2 === 1) {
+            container.classList.add('count-odd');
+        } else {
+            container.classList.add('count-even');
+        }
     },
     
     // Show/hide empty state
@@ -119,37 +139,7 @@ const UI = {
                 <p>Select a platform, enter a <span>channel name</span> and click <span>+</span></p>
             </div>
         `;
-    },
-    
-    // Update layout
-    updateLayout() {
-        const container = this.elements.streamContainer;
-        container.classList.remove('layout-single', 'layout-double', 'layout-triple', 'layout-grid', 'few-items');
-        container.classList.add(`layout-${StreamState.currentLayout}`);
-        
-        if (StreamState.currentLayout === 'grid' && StreamState.getCount() <= 2) {
-            container.classList.add('few-items');
-        }
-        
-        // Reset inline styles
-        container.style.maxWidth = '';
-        container.style.margin = '';
-        container.style.gridTemplateColumns = '';
-        
-        if (StreamState.currentLayout === 'single') {
-            container.style.maxWidth = '1400px';
-            container.style.margin = '0 auto';
-        }
-        
-        // Auto-scroll to bottom when new stream is added
-        if (StreamState.getCount() > 0) {
-            setTimeout(() => {
-                const lastCard = container.querySelector('.stream-wrapper:last-child');
-                if (lastCard) {
-                    lastCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                }
-            }, 100);
-        }
+        this.elements.streamContainer.classList.remove('count-1', 'count-2', 'count-odd', 'count-even');
     },
     
     // Update stream count badge
@@ -164,6 +154,49 @@ const UI = {
             badge.textContent = count;
             this.elements.addBtn.appendChild(badge);
         }
+    },
+    
+    // Show confirmation dialog
+    showConfirmDialog(message, onConfirm) {
+        const overlay = document.createElement('div');
+        overlay.className = 'confirm-overlay';
+        overlay.innerHTML = `
+            <div class="confirm-dialog">
+                <p>${message}</p>
+                <div class="confirm-actions">
+                    <button class="confirm-btn cancel">Cancel</button>
+                    <button class="confirm-btn confirm">Remove All</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+        
+        const cancelBtn = overlay.querySelector('.cancel');
+        const confirmBtn = overlay.querySelector('.confirm');
+        
+        const close = () => {
+            overlay.remove();
+        };
+        
+        cancelBtn.addEventListener('click', close);
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) close();
+        });
+        
+        confirmBtn.addEventListener('click', () => {
+            close();
+            onConfirm();
+        });
+        
+        // Escape key to close
+        const escHandler = (e) => {
+            if (e.key === 'Escape') {
+                close();
+                document.removeEventListener('keydown', escHandler);
+            }
+        };
+        document.addEventListener('keydown', escHandler);
     },
     
     // Show notification

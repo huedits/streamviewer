@@ -1,13 +1,10 @@
 // Configuration and Constants
 const CONFIG = {
     // Application version
-    version: '1.0.2',
+    version: '1.1.0',
     
-    // Twitch embed parent domain
-    twitchParent: null, // Will be auto-detected
-    
-    // Layout defaults
-    defaultLayout: 'single',
+    // Twitch embed parent domain - hardcoded for GitHub Pages
+    twitchParent: 'huedits.github.io',
     
     // Platform definitions
     platforms: {
@@ -34,15 +31,3 @@ const CONFIG = {
         }
     }
 };
-
-// Auto-detect Twitch parent
-(function() {
-    const hostname = window.location.hostname;
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-        CONFIG.twitchParent = 'localhost';
-    } else if (hostname.includes('github.io')) {
-        CONFIG.twitchParent = hostname;
-    } else {
-        CONFIG.twitchParent = hostname || 'localhost';
-    }
-})();
