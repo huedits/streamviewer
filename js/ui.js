@@ -23,7 +23,7 @@ const UI = {
         
         const streamCard = document.createElement('div');
         streamCard.className = 'stream-wrapper';
-        streamCard.dataset.streamId = streamData.id;
+        streamCard.setAttribute('data-stream-id', streamData.id);
         
         if (isNew) streamCard.classList.add('new-stream');
         if (isActive) streamCard.classList.add('audio-active');
@@ -75,8 +75,15 @@ const UI = {
     
     // Remove stream card with animation
     removeStreamCard(streamId) {
-        const card = document.querySelector(`.stream-wrapper[data-stream-id="${streamId}"]`);
-        if (!card) return;
+        // Use a more specific selector to ensure we find the right card
+        const card = this.elements.streamContainer.querySelector(`.stream-wrapper[data-stream-id="${streamId}"]`);
+        
+        if (!card) {
+            console.warn('Card not found for stream ID:', streamId);
+            return;
+        }
+        
+        console.log('Removing card:', streamId); // Debug log
         
         card.classList.add('removing');
         
@@ -85,6 +92,9 @@ const UI = {
             if (card.parentNode) {
                 card.remove();
             }
+            
+            // Update state AFTER card is removed
+            StreamState.removeStream(streamId);
             
             if (StreamState.getCount() === 0) {
                 this.showEmptyState();
@@ -97,12 +107,20 @@ const UI = {
         };
         
         card.addEventListener('animationend', handleAnimationEnd);
+        
+        // Fallback: if animation doesn't fire, remove after timeout
+        setTimeout(() => {
+            if (card.parentNode) {
+                handleAnimationEnd();
+            }
+        }, 500);
     },
     
     // Update audio indicators
     updateAudioIndicators() {
-        document.querySelectorAll('.stream-wrapper').forEach(card => {
-            const streamId = parseInt(card.dataset.streamId);
+        const cards = this.elements.streamContainer.querySelectorAll('.stream-wrapper');
+        cards.forEach(card => {
+            const streamId = parseInt(card.getAttribute('data-stream-id'));
             const stream = StreamState.getStream(streamId);
             if (!stream) return;
             
@@ -113,13 +131,13 @@ const UI = {
                 card.classList.add('audio-active');
                 if (audioBtn) {
                     audioBtn.innerHTML = '🔊';
-                    audioBtn.title = 'Audio On (Click to mute)';
+                    audioBtn.setAttribute('title', 'Audio On (Click to mute)');
                 }
             } else {
                 card.classList.remove('audio-active');
                 if (audioBtn) {
                     audioBtn.innerHTML = '🔇';
-                    audioBtn.title = 'Audio Off (Click to unmute)';
+                    audioBtn.setAttribute('title', 'Audio Off (Click to unmute)');
                 }
             }
         });
@@ -127,7 +145,7 @@ const UI = {
     
     // Show/hide empty state
     removeEmptyState() {
-        const emptyState = document.querySelector('.empty-state');
+        const emptyState = this.elements.streamContainer.querySelector('.empty-state');
         if (emptyState) emptyState.remove();
     },
     

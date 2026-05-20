@@ -7,23 +7,46 @@ const EventHandlers = {
     },
     
     attachStreamContainerEvents() {
-        // Event delegation for stream cards
-        UI.elements.streamContainer.addEventListener('click', (e) => {
+        // Use a named function for event delegation
+        UI.elements.streamContainer.addEventListener('click', this.handleStreamClick.bind(this));
+        
+        // Also attach directly to document as a fallback
+        document.addEventListener('click', (e) => {
             const removeBtn = e.target.closest('.remove-btn');
-            const audioBtn = e.target.closest('.audio-toggle-btn');
-            
-            if (removeBtn) {
+            if (removeBtn && removeBtn.dataset.streamId) {
+                console.log('Remove button clicked via document:', removeBtn.dataset.streamId); // Debug log
                 e.stopPropagation();
-                const streamId = parseInt(removeBtn.dataset.streamId);
-                if (streamId) this.removeStream(streamId);
-            }
-            
-            if (audioBtn) {
-                e.stopPropagation();
-                const streamId = parseInt(audioBtn.dataset.streamId);
-                if (streamId) this.toggleAudio(streamId);
+                e.preventDefault();
+                this.removeStream(parseInt(removeBtn.dataset.streamId));
             }
         });
+    },
+    
+    handleStreamClick(e) {
+        const removeBtn = e.target.closest('.remove-btn');
+        const audioBtn = e.target.closest('.audio-toggle-btn');
+        
+        if (removeBtn) {
+            const streamId = parseInt(removeBtn.getAttribute('data-stream-id'));
+            console.log('Remove button clicked:', streamId); // Debug log
+            
+            if (streamId && !isNaN(streamId)) {
+                e.stopPropagation();
+                e.preventDefault();
+                this.removeStream(streamId);
+            }
+        }
+        
+        if (audioBtn) {
+            const streamId = parseInt(audioBtn.getAttribute('data-stream-id'));
+            console.log('Audio button clicked:', streamId); // Debug log
+            
+            if (streamId && !isNaN(streamId)) {
+                e.stopPropagation();
+                e.preventDefault();
+                this.toggleAudio(streamId);
+            }
+        }
     },
     
     attachAddStreamEvents() {
@@ -76,13 +99,15 @@ const EventHandlers = {
         
         UI.updateLayout();
         UI.updateStreamCount();
+        
+        console.log('Stream added:', streamData); // Debug log
     },
     
     removeStream(streamId) {
+        console.log('Removing stream:', streamId); // Debug log
+        console.log('Current streams:', StreamState.streams); // Debug log
+        
         UI.removeStreamCard(streamId);
-        StreamState.removeStream(streamId);
-        UI.updateLayout();
-        UI.updateStreamCount();
     },
     
     toggleAudio(streamId) {

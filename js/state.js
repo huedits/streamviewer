@@ -20,7 +20,12 @@ const StreamState = {
     // Remove a stream by ID
     removeStream(streamId) {
         const index = this.streams.findIndex(s => s.id === streamId);
-        if (index === -1) return -1;
+        if (index === -1) {
+            console.warn('Stream not found in state:', streamId);
+            return -1;
+        }
+        
+        console.log('Removing from state at index:', index); // Debug log
         
         this.streams.splice(index, 1);
         
