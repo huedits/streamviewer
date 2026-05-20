@@ -17,26 +17,12 @@ const UI = {
     },
     
     // Create stream card HTML
-    createStreamCard(streamData, index) {
-        const isNew = index === StreamState.getCount() - 1 && StreamState.getCount() > 1;
-        
+    createStreamCard(streamData) {
         const streamCard = document.createElement('div');
         streamCard.className = 'stream-wrapper';
         streamCard.setAttribute('data-stream-id', streamData.id);
         
-        if (isNew) streamCard.classList.add('new-stream');
-        
-        const platformConfig = CONFIG.platforms[streamData.platform];
-        
         streamCard.innerHTML = `
-            <div class="stream-header">
-                <span class="platform-badge ${streamData.platform}">
-                    ${platformConfig.icon}
-                    ${platformConfig.name}
-                </span>
-                <span class="stream-url" title="${streamData.channel}">${streamData.channel}</span>
-                <button class="remove-btn" data-stream-id="${streamData.id}" title="Remove stream">×</button>
-            </div>
             <div class="stream-iframe-container">
                 <iframe 
                     src="${streamData.embedUrl}" 
@@ -44,6 +30,7 @@ const UI = {
                     scrolling="no"
                 ></iframe>
             </div>
+            <button class="remove-btn" data-stream-id="${streamData.id}" title="Remove stream">×</button>
         `;
         
         return streamCard;
@@ -53,17 +40,14 @@ const UI = {
     addStreamCard(streamData) {
         this.removeEmptyState();
         
-        const index = StreamState.getCount() - 1;
-        const card = this.createStreamCard(streamData, index);
+        const card = this.createStreamCard(streamData);
         this.elements.streamContainer.appendChild(card);
         
         this.updateGridClass();
         
-        void card.offsetWidth;
-        
-        setTimeout(() => {
+        requestAnimationFrame(() => {
             card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }, 100);
+        });
         
         return card;
     },
@@ -72,15 +56,14 @@ const UI = {
     removeStreamCard(streamId) {
         const card = this.elements.streamContainer.querySelector(`.stream-wrapper[data-stream-id="${streamId}"]`);
         
-        if (!card) {
-            console.warn('Card not found for stream ID:', streamId);
-            return;
-        }
+        if (!card) return;
         
-        card.classList.add('removing');
+        card.style.opacity = '0';
+        card.style.transform = 'scale(0.8)';
+        card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
         
-        const handleAnimationEnd = () => {
-            card.removeEventListener('animationend', handleAnimationEnd);
+        const handleTransitionEnd = () => {
+            card.removeEventListener('transitionend', handleTransitionEnd);
             if (card.parentNode) {
                 card.remove();
             }
@@ -96,11 +79,11 @@ const UI = {
             this.updateStreamCount();
         };
         
-        card.addEventListener('animationend', handleAnimationEnd);
+        card.addEventListener('transitionend', handleTransitionEnd);
         
         setTimeout(() => {
             if (card.parentNode) {
-                handleAnimationEnd();
+                handleTransitionEnd();
             }
         }, 500);
     },
@@ -110,7 +93,7 @@ const UI = {
         const container = this.elements.streamContainer;
         const count = StreamState.getCount();
         
-        container.classList.remove('count-1', 'count-2', 'count-odd', 'count-even');
+        container.classList.remove('count-1', 'count-2', 'count-3', 'count-odd', 'count-even');
         
         if (count === 0) return;
         
@@ -118,6 +101,8 @@ const UI = {
             container.classList.add('count-1');
         } else if (count === 2) {
             container.classList.add('count-2');
+        } else if (count === 3) {
+            container.classList.add('count-3');
         } else if (count % 2 === 1) {
             container.classList.add('count-odd');
         } else {
@@ -139,7 +124,7 @@ const UI = {
                 <p>Select a platform, enter a <span>channel name</span> and click <span>+</span></p>
             </div>
         `;
-        this.elements.streamContainer.classList.remove('count-1', 'count-2', 'count-odd', 'count-even');
+        this.elements.streamContainer.classList.remove('count-1', 'count-2', 'count-3', 'count-odd', 'count-even');
     },
     
     // Update stream count badge
@@ -177,6 +162,11 @@ const UI = {
         
         const close = () => {
             overlay.remove();
+            document.removeEventListener('keydown', escHandler);
+        };
+        
+        const escHandler = (e) => {
+            if (e.key === 'Escape') close();
         };
         
         cancelBtn.addEventListener('click', close);
@@ -189,13 +179,6 @@ const UI = {
             onConfirm();
         });
         
-        // Escape key to close
-        const escHandler = (e) => {
-            if (e.key === 'Escape') {
-                close();
-                document.removeEventListener('keydown', escHandler);
-            }
-        };
         document.addEventListener('keydown', escHandler);
     },
     
