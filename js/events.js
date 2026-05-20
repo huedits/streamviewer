@@ -10,7 +10,6 @@ const EventHandlers = {
     attachStreamContainerEvents() {
         UI.elements.streamContainer.addEventListener('click', (e) => {
             const removeBtn = e.target.closest('.remove-btn');
-            const chatBtn = e.target.closest('.chat-toggle-btn');
             
             if (removeBtn) {
                 const streamId = parseInt(removeBtn.getAttribute('data-stream-id'));
@@ -18,15 +17,6 @@ const EventHandlers = {
                     e.stopPropagation();
                     e.preventDefault();
                     this.removeStream(streamId);
-                }
-            }
-            
-            if (chatBtn) {
-                const streamId = parseInt(chatBtn.getAttribute('data-stream-id'));
-                if (streamId && !isNaN(streamId)) {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    ChatManager.switchChat(streamId);
                 }
             }
         });
@@ -117,6 +107,11 @@ const EventHandlers = {
             return;
         }
         
+        // Clear all chat tabs immediately
+        document.getElementById('chatTabs').innerHTML = '';
+        ChatManager.close();
+        ChatManager.activeChatId = null;
+        
         allCards.forEach((card, index) => {
             setTimeout(() => {
                 card.style.opacity = '0';
@@ -131,7 +126,6 @@ const EventHandlers = {
             
             UI.elements.streamContainer.innerHTML = '';
             StreamState.streams = [];
-            ChatManager.close();
             UI.showEmptyState();
             UI.updateStreamCount();
             this.updateRemoveAllButton();
@@ -143,7 +137,6 @@ const EventHandlers = {
             if (UI.elements.streamContainer.querySelector('.stream-wrapper')) {
                 UI.elements.streamContainer.innerHTML = '';
                 StreamState.streams = [];
-                ChatManager.close();
                 UI.showEmptyState();
                 UI.updateStreamCount();
                 this.updateRemoveAllButton();

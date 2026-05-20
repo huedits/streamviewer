@@ -4,6 +4,7 @@ const ChatManager = {
     
     init() {
         this.attachCloseButton();
+        this.attachReopenButton();
     },
     
     // Get chat embed URL for a stream
@@ -26,15 +27,26 @@ const ChatManager = {
     // Open chat panel
     open() {
         const panel = document.getElementById('chatPanel');
+        const reopenBtn = document.getElementById('chatReopenBtn');
+        
         panel.classList.add('open');
+        reopenBtn.classList.remove('visible');
     },
     
     // Close chat panel
     close() {
         const panel = document.getElementById('chatPanel');
+        const reopenBtn = document.getElementById('chatReopenBtn');
+        
         panel.classList.remove('open');
-        this.activeChatId = null;
-        this.updateActiveTab();
+        
+        // Only show reopen button if there are chat tabs
+        const tabs = document.querySelectorAll('.chat-tab');
+        if (tabs.length > 0) {
+            reopenBtn.classList.add('visible');
+        } else {
+            reopenBtn.classList.remove('visible');
+        }
     },
     
     // Toggle chat panel
@@ -65,8 +77,8 @@ const ChatManager = {
         
         tabsContainer.appendChild(tab);
         
-        // If this is the first tab, open it
-        if (!this.activeChatId) {
+        // If this is the first tab, switch to it
+        if (!this.activeChatId || tabsContainer.children.length === 1) {
             this.switchChat(streamData.id);
         }
     },
@@ -74,19 +86,35 @@ const ChatManager = {
     // Remove a chat tab
     removeChatTab(streamId) {
         const tab = document.querySelector(`.chat-tab[data-stream-id="${streamId}"]`);
-        if (tab) {
-            const wasActive = this.activeChatId === streamId;
-            tab.remove();
+        if (!tab) return;
+        
+        const wasActive = this.activeChatId === streamId;
+        tab.remove();
+        
+        if (wasActive) {
+            // Clear the chat container
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.innerHTML = `
+                <div class="chat-empty">
+                    <span>💬</span>
+                    <p>Select a stream to view chat</p>
+                </div>
+            `;
+            this.activeChatId = null;
             
-            if (wasActive) {
-                // Switch to another tab or close
-                const remainingTabs = document.querySelectorAll('.chat-tab');
-                if (remainingTabs.length > 0) {
-                    const firstTab = remainingTabs[0];
-                    this.switchChat(parseInt(firstTab.dataset.streamId));
-                } else {
-                    this.close();
+            // Switch to another tab if available
+            const remainingTabs = document.querySelectorAll('.chat-tab');
+            if (remainingTabs.length > 0) {
+                const firstTab = remainingTabs[0];
+                const nextStreamId = parseInt(firstTab.dataset.streamId);
+                if (nextStreamId) {
+                    this.switchChat(nextStreamId);
                 }
+            } else {
+                // No tabs left, close panel
+                this.activeChatId = null;
+                this.close();
+                document.getElementById('chatReopenBtn').classList.remove('visible');
             }
         }
     },
@@ -125,18 +153,6 @@ const ChatManager = {
                 tab.classList.remove('active');
             }
         });
-        
-        // Update chat toggle buttons on stream cards
-        document.querySelectorAll('.chat-toggle-btn').forEach(btn => {
-            const streamId = parseInt(btn.dataset.streamId);
-            if (streamId === this.activeChatId) {
-                btn.classList.add('active');
-                btn.textContent = '💬';
-            } else {
-                btn.classList.remove('active');
-                btn.textContent = '💭';
-            }
-        });
     },
     
     // Attach close button event
@@ -144,6 +160,14 @@ const ChatManager = {
         const closeBtn = document.getElementById('chatCloseBtn');
         if (closeBtn) {
             closeBtn.addEventListener('click', () => this.close());
+        }
+    },
+    
+    // Attach reopen button event
+    attachReopenButton() {
+        const reopenBtn = document.getElementById('chatReopenBtn');
+        if (reopenBtn) {
+            reopenBtn.addEventListener('click', () => this.open());
         }
     }
 };

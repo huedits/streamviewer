@@ -236,6 +236,7 @@ body {
     display: flex;
     overflow: hidden;
     min-height: 0;
+    position: relative;
 }
 
 /* Stream Grid */
@@ -334,46 +335,8 @@ body {
     border: none;
 }
 
-/* Chat toggle button on stream */
-.chat-toggle-btn {
-    position: absolute;
-    top: 10px;
-    right: 56px;
-    z-index: 10;
-    background-color: rgba(0, 0, 0, 0.7);
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: all 0.2s ease;
-    backdrop-filter: blur(4px);
-}
-
-.stream-wrapper:hover .chat-toggle-btn {
-    opacity: 1;
-}
-
-.chat-toggle-btn:hover {
-    background-color: #9147ff;
-    color: white;
-    transform: scale(1.1);
-}
-
-.chat-toggle-btn.active {
-    background-color: #9147ff;
-    color: white;
-    opacity: 1;
-}
-
 /* Remove button overlay */
-.remove-btn {
+.stream-wrapper:hover .remove-btn {
     position: absolute;
     top: 10px;
     right: 10px;
@@ -402,6 +365,47 @@ body {
     background-color: #ff0000;
     color: white;
     transform: scale(1.1);
+}
+
+/* Chat Reopen Button */
+.chat-reopen-btn {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 40;
+    background-color: #18181b;
+    color: #aaa;
+    border: 1px solid #2d2d35;
+    border-right: none;
+    cursor: pointer;
+    width: 24px;
+    height: 48px;
+    border-radius: 6px 0 0 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 0;
+    opacity: 0;
+}
+
+.chat-reopen-btn.visible {
+    opacity: 1;
+}
+
+.chat-reopen-btn:hover {
+    background-color: #9147ff;
+    color: white;
+    border-color: #9147ff;
+}
+
+.chat-reopen-btn svg {
+    transition: transform 0.2s ease;
+}
+
+.chat-reopen-btn:hover svg {
+    transform: translateX(2px);
 }
 
 /* Chat Panel */
