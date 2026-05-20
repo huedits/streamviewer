@@ -16,7 +16,7 @@ const platformIcons = {
     </svg>`,
     
     kick: `<svg class="platform-icon" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M3 3h6v6H3V3zm0 8h6v6H3v-6zm8-8h6v6h-6V3zm0 8h6v6h-6v-6zm8-8h6v6h-6V3z"/>
+    <path d="M3 3h7.2l1.8 4.8L13.8 3H21l-6 8.4L21 21h-7.2l-1.8-5.4L10.2 21H3l6-8.4L3 3z"/>
     </svg>`,
     
     youtube: `<svg class="platform-icon" viewBox="0 0 24 24" fill="currentColor">
