@@ -21,20 +21,15 @@ const UI = {
         
         streamCard.innerHTML = `
             <div class="stream-iframe-container">
-                <!-- Player container will be appended here -->
+                <iframe 
+                    src="${streamData.embedUrl}" 
+                    allowfullscreen="true"
+                    scrolling="no"
+                    allow="autoplay; fullscreen"
+                ></iframe>
             </div>
             <button class="remove-btn" data-stream-id="${streamData.id}" title="Remove stream">×</button>
         `;
-        
-        // Initialize the player
-        const iframeContainer = streamCard.querySelector('.stream-iframe-container');
-        const playerContainer = EmbedManager.createPlayerContainer(streamData.id);
-        iframeContainer.appendChild(playerContainer);
-        
-        // Initialize player after DOM insertion
-        requestAnimationFrame(() => {
-            EmbedManager.initPlayer(streamData, playerContainer);
-        });
         
         return streamCard;
     },
@@ -58,9 +53,6 @@ const UI = {
         const card = this.elements.streamContainer.querySelector(`.stream-wrapper[data-stream-id="${streamId}"]`);
         
         if (!card) return;
-        
-        // Destroy the player
-        EmbedManager.destroyPlayer(streamId);
         
         card.style.opacity = '0';
         card.style.transform = 'scale(0.8)';
@@ -117,9 +109,6 @@ const UI = {
     },
     
     showEmptyState() {
-        // Destroy all players first
-        EmbedManager.destroyAll();
-        
         this.elements.streamContainer.innerHTML = `
             <div class="empty-state">
                 <div class="icon">📺</div>
