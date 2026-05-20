@@ -2,6 +2,7 @@
 let streams = [];
 let currentLayout = 'single'; // Default to single column layout
 let activeAudioStream = null; // Track which stream has audio enabled
+let streamCounter = 0; // Unique ID counter for streams
 
 // DOM Elements
 let platformSelect = document.getElementById('platformSelect');
@@ -17,7 +18,7 @@ const platformIcons = {
     </svg>`,
     
     kick: `<svg class="platform-icon" viewBox="0 0 24 24" fill="#53fc18">
-        <path d="M7 3v18M7 12l10-9M7 12l10 9"/>
+    <path d="M8 3v18M8 12l12-9M8 12l12 9" stroke="#53fc18" stroke-width="2" fill="none"/>
     </svg>`,
     
     youtube: `<svg class="platform-icon" viewBox="0 0 24 24" fill="#ff0000">
@@ -229,7 +230,7 @@ function getTwitchParent() {
 }
 
 // Build embed URL with audio parameters
-function getEmbedUrl(platform, channelOrId, index) {
+function getEmbedUrl(platform, channelOrId, isFirst) {
     const input = channelOrId.trim();
     let baseUrl = '';
     let channel = '';
@@ -244,7 +245,7 @@ function getEmbedUrl(platform, channelOrId, index) {
             const parent = getTwitchParent();
             channel = twitchChannel;
             // First stream has audio, rest are muted
-            const muted = index === 0 ? 'false' : 'true';
+            const muted = isFirst ? 'false' : 'true';
             baseUrl = `https://player.twitch.tv/?channel=${encodeURIComponent(twitchChannel)}&parent=${parent}&muted=${muted}`;
             break;
         
@@ -255,7 +256,6 @@ function getEmbedUrl(platform, channelOrId, index) {
                 kickChannel = kickMatch[1];
             }
             channel = kickChannel;
-            // Kick doesn't support mute parameter directly, we'll handle via iframe attribute
             baseUrl = `https://player.kick.com/${encodeURIComponent(kickChannel)}`;
             break;
         
@@ -267,7 +267,7 @@ function getEmbedUrl(platform, channelOrId, index) {
             }
             channel = videoId;
             // First stream has audio (mute=0), rest are muted (mute=1)
-            const muteParam = index === 0 ? 'mute=0' : 'mute=1';
+            const muteParam = isFirst ? 'mute=0' : 'mute=1';
             baseUrl = `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?${muteParam}`;
             break;
         
@@ -281,106 +281,118 @@ function getEmbedUrl(platform, channelOrId, index) {
     };
 }
 
-// Handle audio toggle when clicking on a stream
-function setActiveAudio(index) {
-    // Update active audio stream
-    activeAudioStream = index;
+// Create a single stream card element
+function createStreamCard(streamData, index, isNew) {
+    const streamCard = document.createElement('div');
+    streamCard.className = 'stream-wrapper';
+    streamCard.dataset.streamId = streamData.id;
     
-    // Re-render to update audio states
-    renderStreams();
+    if (isNew) {
+        streamCard.classList.add('new-stream');
+    }
+    
+    if (index === activeAudioStream) {
+        streamCard.classList.add('audio-active');
+    }
+    
+    const audioIcon = index === activeAudioStream ? '🔊' : '🔇';
+    const audioTitle = index === activeAudioStream ? 'Audio On (Click to mute)' : 'Audio Off (Click to unmute)';
+    
+    streamCard.innerHTML = `
+        <div class="stream-header">
+            <span class="platform-badge ${streamData.platform}">
+                ${platformIcons[streamData.platform]}
+                ${streamData.platform}
+            </span>
+            <span class="stream-url" title="${streamData.channel}">${streamData.channel}</span>
+            <button class="audio-toggle-btn" data-stream-id="${streamData.id}" title="${audioTitle}">${audioIcon}</button>
+            <button class="remove-btn" data-stream-id="${streamData.id}" title="Remove stream">×</button>
+        </div>
+        <div class="stream-iframe-container">
+            <iframe 
+                src="${streamData.embedUrl}" 
+                allowfullscreen="true"
+                scrolling="no"
+            ></iframe>
+        </div>
+    `;
+    
+    // Add event listeners directly to the card
+    const audioBtn = streamCard.querySelector('.audio-toggle-btn');
+    audioBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        setActiveAudio(streamData.id);
+    });
+    
+    const removeBtn = streamCard.querySelector('.remove-btn');
+    removeBtn.addEventListener('click', function() {
+        removeStream(streamData.id);
+    });
+    
+    return streamCard;
 }
 
-// Render all streams
-function renderStreams() {
-    // Clear container
-    streamContainer.innerHTML = '';
+// Update audio indicators on all streams
+function updateAudioIndicators() {
+    document.querySelectorAll('.stream-wrapper').forEach(card => {
+        const streamId = parseInt(card.dataset.streamId);
+        const stream = streams.find(s => s.id === streamId);
+        if (!stream) return;
+        
+        const streamIndex = streams.indexOf(stream);
+        const audioBtn = card.querySelector('.audio-toggle-btn');
+        
+        if (streamIndex === activeAudioStream) {
+            card.classList.add('audio-active');
+            if (audioBtn) {
+                audioBtn.innerHTML = '🔊';
+                audioBtn.title = 'Audio On (Click to mute)';
+            }
+        } else {
+            card.classList.remove('audio-active');
+            if (audioBtn) {
+                audioBtn.innerHTML = '🔇';
+                audioBtn.title = 'Audio Off (Click to unmute)';
+            }
+        }
+    });
+}
 
-    if (streams.length === 0) {
-        // Reset active audio
+// Handle audio toggle when clicking on a stream
+function setActiveAudio(streamId) {
+    const stream = streams.find(s => s.id === streamId);
+    if (!stream) return;
+    
+    const newIndex = streams.indexOf(stream);
+    
+    if (activeAudioStream === newIndex) {
+        // If clicking the same stream, mute it
         activeAudioStream = null;
-        
-        // Show empty state
-        streamContainer.innerHTML = `
-            <div class="empty-state">
-                <div class="icon">📺</div>
-                <p>No streams added yet</p>
-                <p>Select a platform, enter a <span>channel name</span> and click <span>+</span></p>
-            </div>
-        `;
-        updateLayout();
-        updateStreamCount();
-        return;
+    } else {
+        // Set new active audio stream
+        activeAudioStream = newIndex;
     }
+    
+    updateAudioIndicators();
+}
 
-    // If active audio stream no longer exists, reset to first stream
-    if (activeAudioStream === null || activeAudioStream >= streams.length) {
-        activeAudioStream = 0;
+// Remove empty state if present
+function removeEmptyState() {
+    const emptyState = document.querySelector('.empty-state');
+    if (emptyState) {
+        emptyState.remove();
     }
+}
 
-    // Render each stream
-    streams.forEach((stream, index) => {
-        const streamCard = document.createElement('div');
-        streamCard.className = 'stream-wrapper';
-        
-        // Add new-stream class if this is the last added stream
-        if (index === streams.length - 1 && streams.length > 1) {
-            streamCard.classList.add('new-stream');
-        }
-        
-        // Add audio-active class if this stream has audio
-        if (index === activeAudioStream) {
-            streamCard.classList.add('audio-active');
-        }
-        
-        streamCard.dataset.index = index;
-        
-        // Audio indicator icon
-        const audioIcon = index === activeAudioStream ? '🔊' : '🔇';
-        const audioTitle = index === activeAudioStream ? 'Audio On (Click to mute)' : 'Audio Off (Click to unmute)';
-        
-        streamCard.innerHTML = `
-            <div class="stream-header">
-                <span class="platform-badge ${stream.platform}">
-                    ${platformIcons[stream.platform]}
-                    ${stream.platform}
-                </span>
-                <span class="stream-url" title="${stream.channel}">${stream.channel}</span>
-                <button class="audio-toggle-btn" data-index="${index}" title="${audioTitle}">${audioIcon}</button>
-                <button class="remove-btn" data-index="${index}" title="Remove stream">×</button>
-            </div>
-            <div class="stream-iframe-container">
-                <iframe 
-                    src="${stream.embedUrl}" 
-                    allowfullscreen="true"
-                    scrolling="no"
-                ></iframe>
-            </div>
-        `;
-        streamContainer.appendChild(streamCard);
-        
-        // Trigger reflow for animation
-        void streamCard.offsetWidth;
-    });
-
-    // Attach audio toggle event listeners
-    document.querySelectorAll('.audio-toggle-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const index = parseInt(this.getAttribute('data-index'));
-            setActiveAudio(index);
-        });
-    });
-    
-    // Attach remove event listeners
-    document.querySelectorAll('.remove-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const index = parseInt(this.getAttribute('data-index'));
-            removeStream(index);
-        });
-    });
-    
-    updateLayout();
-    updateStreamCount();
+// Show empty state
+function showEmptyState() {
+    streamContainer.innerHTML = `
+        <div class="empty-state">
+            <div class="icon">📺</div>
+            <p>No streams added yet</p>
+            <p>Select a platform, enter a <span>channel name</span> and click <span>+</span></p>
+        </div>
+    `;
 }
 
 // Add a new stream
@@ -399,82 +411,109 @@ function addStream() {
         return;
     }
 
-    const newIndex = streams.length;
-    const embedData = getEmbedUrl(platform, input, newIndex);
+    const isFirst = streams.length === 0;
+    const embedData = getEmbedUrl(platform, input, isFirst);
     
     if (!embedData) {
         alert('Invalid input. Please check and try again.');
         return;
     }
 
-    // Add to streams array
-    streams.push({
+    // Remove empty state if it exists
+    removeEmptyState();
+
+    // Create stream object with unique ID
+    const streamData = {
+        id: ++streamCounter,
         platform: platform,
         channel: embedData.channel,
         embedUrl: embedData.url
-    });
+    };
 
+    // Add to streams array
+    streams.push(streamData);
+    
     // If this is the first stream, set it as active audio
     if (streams.length === 1) {
         activeAudioStream = 0;
     }
 
+    // Create and append the new stream card
+    const newCard = createStreamCard(streamData, streams.length - 1, streams.length > 1);
+    streamContainer.appendChild(newCard);
+    
+    // Trigger reflow for animation
+    void newCard.offsetWidth;
+
     // Clear input
     streamInput.value = '';
     
-    // Re-render
-    renderStreams();
+    // Update layout and count
+    updateLayout();
+    updateStreamCount();
 
     // Focus back on input for quick adding
     streamInput.focus();
     
-    // Scroll to the new stream if it's not visible
+    // Scroll to the new stream
     setTimeout(() => {
-        const lastStream = document.querySelector('.stream-wrapper:last-child');
-        if (lastStream) {
-            lastStream.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
+        newCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 100);
 }
 
-// Remove a stream by index
-function removeStream(index) {
-    const streamCard = document.querySelector(`.stream-wrapper[data-index="${index}"]`);
+// Remove a stream by ID
+function removeStream(streamId) {
+    const streamIndex = streams.findIndex(s => s.id === streamId);
+    if (streamIndex === -1) return;
+    
+    const streamCard = document.querySelector(`.stream-wrapper[data-stream-id="${streamId}"]`);
     
     if (streamCard) {
         // Add removing animation
         streamCard.classList.add('removing');
         
         // Remove after animation completes
-        setTimeout(() => {
-            streams.splice(index, 1);
+        streamCard.addEventListener('animationend', function() {
+            streamCard.remove();
+            
+            // Remove from array
+            streams.splice(streamIndex, 1);
             
             // Update active audio stream
             if (streams.length === 0) {
                 activeAudioStream = null;
-            } else if (activeAudioStream === index) {
-                // If we removed the active audio stream, set to first stream
-                activeAudioStream = 0;
-            } else if (activeAudioStream > index) {
-                // Adjust index if we removed a stream before the active one
-                activeAudioStream--;
+                showEmptyState();
+            } else {
+                if (activeAudioStream === streamIndex) {
+                    // If we removed the active audio stream, set to first stream
+                    activeAudioStream = 0;
+                } else if (activeAudioStream > streamIndex) {
+                    // Adjust index if we removed a stream before the active one
+                    activeAudioStream--;
+                }
+                updateAudioIndicators();
             }
             
-            renderStreams();
-        }, 300);
+            updateLayout();
+            updateStreamCount();
+        });
     } else {
-        streams.splice(index, 1);
+        // Fallback if card not found
+        streams.splice(streamIndex, 1);
         
-        // Update active audio stream
         if (streams.length === 0) {
             activeAudioStream = null;
-        } else if (activeAudioStream === index) {
-            activeAudioStream = 0;
-        } else if (activeAudioStream > index) {
-            activeAudioStream--;
+            showEmptyState();
+        } else {
+            if (activeAudioStream === streamIndex) {
+                activeAudioStream = 0;
+            } else if (activeAudioStream > streamIndex) {
+                activeAudioStream--;
+            }
         }
         
-        renderStreams();
+        updateLayout();
+        updateStreamCount();
     }
 }
 
@@ -526,7 +565,8 @@ streamInput.addEventListener('keypress', function(e) {
 document.addEventListener('keydown', function(e) {
     if (e.ctrlKey && e.key === 'z' && streams.length > 0) {
         e.preventDefault();
-        removeStream(streams.length - 1);
+        const lastStream = streams[streams.length - 1];
+        removeStream(lastStream.id);
     }
 });
 
@@ -534,4 +574,4 @@ document.addEventListener('keydown', function(e) {
 createCustomDropdown();
 addLayoutControls();
 updateLayout(); // Start with single column layout
-renderStreams();
+updateStreamCount();
