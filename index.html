@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Stream Viewer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Control Bar -->
+    <div class="control-bar">
+        <select id="platformSelect">
+            <option value="twitch">Twitch</option>
+            <option value="kick">Kick</option>
+            <option value="youtube">YouTube</option>
+        </select>
+        <input 
+            type="text" 
+            id="streamInput" 
+            placeholder="Enter channel name or video ID..."
+        />
+        <button class="add-btn" id="addBtn" title="Add Stream">+</button>
+    </div>
+
+    <!-- Stream Grid -->
+    <div class="stream-container" id="streamContainer">
+        <div class="empty-state">
+            <div class="icon">📺</div>
+            <p>No streams added yet</p>
+            <p>Select a platform, enter a <span>channel name</span> and click <span>+</span></p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
