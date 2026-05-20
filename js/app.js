@@ -25,33 +25,7 @@ const App = {
         const versionDisplay = document.getElementById('versionDisplay');
         if (versionDisplay) {
             versionDisplay.textContent = `v${CONFIG.version}`;
-            versionDisplay.title = `Version ${CONFIG.version} - Click to see changelog`;
-            
-            // Optional: Add click handler to show changelog
-            versionDisplay.style.cursor = 'pointer';
-            versionDisplay.addEventListener('click', () => {
-                this.showChangelog();
-            });
         }
-    },
-    
-    showChangelog() {
-        const changelog = `
-📋 Changelog
-━━━━━━━━━━━━━━━━━━━━
-v1.0.0 - Initial Release
-• Multi-platform stream support (Twitch, Kick, YouTube)
-• Single, double, triple, and auto grid layouts
-• Audio management (only first stream has audio)
-• Duplicate stream detection
-• Stream card animations
-• Custom platform dropdown with icons
-• Responsive 16:9 aspect ratio
-• Keyboard shortcuts (Ctrl+Z to remove last stream)
-• Modular JavaScript architecture
-        `.trim();
-        
-        alert(changelog);
     }
 };
 

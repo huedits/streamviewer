@@ -19,18 +19,14 @@ const UI = {
     // Create stream card HTML
     createStreamCard(streamData, index) {
         const isNew = index === StreamState.getCount() - 1 && StreamState.getCount() > 1;
-        const isActive = index === StreamState.activeAudioStream;
         
         const streamCard = document.createElement('div');
         streamCard.className = 'stream-wrapper';
         streamCard.setAttribute('data-stream-id', streamData.id);
         
         if (isNew) streamCard.classList.add('new-stream');
-        if (isActive) streamCard.classList.add('audio-active');
         
         const platformConfig = CONFIG.platforms[streamData.platform];
-        const audioIcon = isActive ? '🔊' : '🔇';
-        const audioTitle = isActive ? 'Audio On (Click to mute)' : 'Audio Off (Click to unmute)';
         
         streamCard.innerHTML = `
             <div class="stream-header">
@@ -39,7 +35,6 @@ const UI = {
                     ${platformConfig.name}
                 </span>
                 <span class="stream-url" title="${streamData.channel}">${streamData.channel}</span>
-                <button class="audio-toggle-btn" data-stream-id="${streamData.id}" title="${audioTitle}">${audioIcon}</button>
                 <button class="remove-btn" data-stream-id="${streamData.id}" title="Remove stream">×</button>
             </div>
             <div class="stream-iframe-container">
@@ -75,15 +70,12 @@ const UI = {
     
     // Remove stream card with animation
     removeStreamCard(streamId) {
-        // Use a more specific selector to ensure we find the right card
         const card = this.elements.streamContainer.querySelector(`.stream-wrapper[data-stream-id="${streamId}"]`);
         
         if (!card) {
             console.warn('Card not found for stream ID:', streamId);
             return;
         }
-        
-        console.log('Removing card:', streamId); // Debug log
         
         card.classList.add('removing');
         
@@ -93,13 +85,10 @@ const UI = {
                 card.remove();
             }
             
-            // Update state AFTER card is removed
             StreamState.removeStream(streamId);
             
             if (StreamState.getCount() === 0) {
                 this.showEmptyState();
-            } else {
-                this.updateAudioIndicators();
             }
             
             this.updateLayout();
@@ -108,39 +97,12 @@ const UI = {
         
         card.addEventListener('animationend', handleAnimationEnd);
         
-        // Fallback: if animation doesn't fire, remove after timeout
+        // Fallback timeout
         setTimeout(() => {
             if (card.parentNode) {
                 handleAnimationEnd();
             }
         }, 500);
-    },
-    
-    // Update audio indicators
-    updateAudioIndicators() {
-        const cards = this.elements.streamContainer.querySelectorAll('.stream-wrapper');
-        cards.forEach(card => {
-            const streamId = parseInt(card.getAttribute('data-stream-id'));
-            const stream = StreamState.getStream(streamId);
-            if (!stream) return;
-            
-            const streamIndex = StreamState.getStreamIndex(streamId);
-            const audioBtn = card.querySelector('.audio-toggle-btn');
-            
-            if (streamIndex === StreamState.activeAudioStream) {
-                card.classList.add('audio-active');
-                if (audioBtn) {
-                    audioBtn.innerHTML = '🔊';
-                    audioBtn.setAttribute('title', 'Audio On (Click to mute)');
-                }
-            } else {
-                card.classList.remove('audio-active');
-                if (audioBtn) {
-                    audioBtn.innerHTML = '🔇';
-                    audioBtn.setAttribute('title', 'Audio Off (Click to unmute)');
-                }
-            }
-        });
     },
     
     // Show/hide empty state
@@ -169,35 +131,14 @@ const UI = {
             container.classList.add('few-items');
         }
         
-        if (StreamState.currentLayout === 'grid') {
-            const count = StreamState.getCount();
-            if (count === 1) {
-                container.style.gridTemplateColumns = '1fr';
-                container.style.maxWidth = '1400px';
-                container.style.margin = '0 auto';
-            } else if (count === 2) {
-                container.style.gridTemplateColumns = 'repeat(2, 1fr)';
-                container.style.maxWidth = '100%';
-                container.style.margin = '0';
-            } else if (count === 3) {
-                container.style.gridTemplateColumns = 'repeat(3, 1fr)';
-                container.style.maxWidth = '100%';
-                container.style.margin = '0';
-            } else if (count === 4) {
-                container.style.gridTemplateColumns = 'repeat(2, 1fr)';
-                container.style.maxWidth = '100%';
-                container.style.margin = '0';
-            } else {
-                container.style.gridTemplateColumns = 'repeat(auto-fill, minmax(400px, 1fr))';
-                container.style.maxWidth = '100%';
-                container.style.margin = '0';
-            }
-        } else if (StreamState.currentLayout === 'single') {
+        // Reset inline styles
+        container.style.maxWidth = '';
+        container.style.margin = '';
+        container.style.gridTemplateColumns = '';
+        
+        if (StreamState.currentLayout === 'single') {
             container.style.maxWidth = '1400px';
             container.style.margin = '0 auto';
-        } else {
-            container.style.maxWidth = '100%';
-            container.style.margin = '0';
         }
         
         // Auto-scroll to bottom when new stream is added
@@ -209,7 +150,7 @@ const UI = {
                 }
             }, 100);
         }
-},
+    },
     
     // Update stream count badge
     updateStreamCount() {

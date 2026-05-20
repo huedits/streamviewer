@@ -1,7 +1,7 @@
 // Configuration and Constants
 const CONFIG = {
     // Application version
-    version: '1.0.1',
+    version: '1.0.2',
     
     // Twitch embed parent domain
     twitchParent: null, // Will be auto-detected

@@ -23,13 +23,12 @@ const EmbedBuilder = {
     },
     
     // Build embed URL
-    buildUrl(platform, channel, isFirst) {
+    buildUrl(platform, channel) {
         let url = '';
         
         switch (platform) {
             case 'twitch':
-                const muted = isFirst ? 'false' : 'true';
-                url = `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${CONFIG.twitchParent}&muted=${muted}`;
+                url = `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${CONFIG.twitchParent}`;
                 break;
             
             case 'kick':
@@ -37,8 +36,7 @@ const EmbedBuilder = {
                 break;
             
             case 'youtube':
-                const muteParam = isFirst ? 'mute=0' : 'mute=1';
-                url = `https://www.youtube.com/embed/${encodeURIComponent(channel)}?${muteParam}`;
+                url = `https://www.youtube.com/embed/${encodeURIComponent(channel)}`;
                 break;
         }
         
@@ -50,8 +48,7 @@ const EmbedBuilder = {
         const channel = this.parseInput(platform, input);
         if (!channel) return null;
         
-        const isFirst = StreamState.getCount() === 0;
-        const url = this.buildUrl(platform, channel, isFirst);
+        const url = this.buildUrl(platform, channel);
         
         return {
             platform: platform,

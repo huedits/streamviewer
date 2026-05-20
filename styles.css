@@ -6,7 +6,7 @@
 
 html, body {
     height: 100%;
-    overflow: hidden; /* Prevent body scrollbar */
+    overflow: hidden;
 }
 
 body {
@@ -26,7 +26,7 @@ body {
     gap: 10px;
     border-bottom: 2px solid #2d2d35;
     flex-wrap: wrap;
-    flex-shrink: 0; /* Prevent shrinking */
+    flex-shrink: 0;
     z-index: 100;
 }
 
@@ -132,7 +132,6 @@ body {
     border-left-color: #9147ff;
 }
 
-/* Hide the original select */
 .hidden-select {
     display: none;
 }
@@ -187,7 +186,6 @@ body {
     transform: scale(0.95) translateY(0);
 }
 
-/* Ripple effect for add button */
 .add-btn::after {
     content: '';
     position: absolute;
@@ -205,15 +203,6 @@ body {
     opacity: 0;
 }
 
-/* Main content area - takes remaining height */
-.main-content {
-    flex: 1;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    min-height: 0; /* Important for Firefox */
-}
-
 /* Stream Grid - Scrollable */
 .stream-container {
     flex: 1;
@@ -224,11 +213,10 @@ body {
     padding: 20px;
     width: 100%;
     transition: all 0.3s ease;
-    align-items: start;
     align-content: start;
 }
 
-/* Custom scrollbar for stream container */
+/* Custom scrollbar */
 .stream-container::-webkit-scrollbar {
     width: 8px;
 }
@@ -247,7 +235,6 @@ body {
     background: #9147ff;
 }
 
-/* Firefox scrollbar */
 .stream-container {
     scrollbar-width: thin;
     scrollbar-color: #3a3a3d #1f1f23;
@@ -255,35 +242,31 @@ body {
 
 /* Single Column Layout */
 .stream-container.layout-single {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     max-width: 1400px;
     margin: 0 auto;
+    width: 100%;
 }
 
 /* Double Column Layout */
 .stream-container.layout-double {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     max-width: 100%;
 }
 
 /* Triple Column Layout */
 .stream-container.layout-triple {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     max-width: 100%;
 }
 
-/* Auto Grid Layout - Responsive based on container width */
+/* Auto Grid Layout */
 .stream-container.layout-grid {
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(400px, 100%), 1fr));
     max-width: 100%;
 }
 
-/* When there are fewer items, center them */
-.stream-container.layout-grid.few-items {
-    justify-content: center;
-}
-
-/* Stream Wrapper with entrance/exit animations */
+/* Stream Wrapper */
 .stream-wrapper {
     position: relative;
     background-color: #18181b;
@@ -295,13 +278,15 @@ body {
     flex-direction: column;
     animation: fadeInScale 0.4s ease;
     width: 100%;
+    min-width: 0;
+    height: fit-content;
 }
 
-/* Maintain 16:9 aspect ratio for the iframe container */
+/* Maintain 16:9 aspect ratio */
 .stream-iframe-container {
     position: relative;
     width: 100%;
-    padding-top: 56.25%; /* 16:9 Aspect Ratio */
+    padding-top: 56.25%;
     background-color: #000;
 }
 
@@ -346,7 +331,6 @@ body {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
 }
 
-/* Highlight animation for newly added stream */
 .stream-wrapper.new-stream {
     border-color: #53fc18;
     box-shadow: 0 0 20px rgba(83, 252, 24, 0.3);
@@ -400,11 +384,6 @@ body {
     color: white;
 }
 
-.platform-badge .badge-icon {
-    width: 14px;
-    height: 14px;
-}
-
 .stream-url {
     font-size: 12px;
     color: #aaa;
@@ -431,6 +410,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .remove-btn:hover {
@@ -488,12 +468,8 @@ body {
 }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .empty-state .icon {
@@ -504,12 +480,8 @@ body {
 }
 
 @keyframes float {
-    0%, 100% {
-        transform: translateY(0px);
-    }
-    50% {
-        transform: translateY(-10px);
-    }
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
 }
 
 .empty-state span {
@@ -529,12 +501,8 @@ body {
 }
 
 @keyframes popIn {
-    from {
-        transform: scale(0);
-    }
-    to {
-        transform: scale(1);
-    }
+    from { transform: scale(0); }
+    to { transform: scale(1); }
 }
 
 /* Footer */
@@ -545,7 +513,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    flex-shrink: 0; /* Prevent shrinking */
+    flex-shrink: 0;
 }
 
 .footer-content {
@@ -572,45 +540,37 @@ body {
     padding: 3px 8px;
     border-radius: 4px;
     font-size: 12px;
-    cursor: pointer;
 }
 
 .footer-version:hover {
     background-color: #2d2d35;
 }
 
-/* Responsive adjustments */
+/* Responsive breakpoints */
 @media (max-width: 1400px) {
     .stream-container.layout-grid {
-        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    }
-    
-    .stream-container.layout-triple {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(auto-fill, minmax(min(350px, 100%), 1fr));
     }
 }
 
 @media (max-width: 1100px) {
     .stream-container.layout-grid {
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
     }
     
     .stream-container.layout-triple {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
 @media (max-width: 768px) {
-    .stream-container.layout-double {
-        grid-template-columns: 1fr;
-    }
-    
+    .stream-container.layout-double,
     .stream-container.layout-triple {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
     
     .stream-container.layout-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 
@@ -632,5 +592,10 @@ body {
     
     .custom-dropdown {
         width: 100%;
+    }
+    
+    .layout-controls {
+        justify-content: center;
+        margin-left: 0;
     }
 }
