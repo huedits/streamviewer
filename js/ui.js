@@ -33,8 +33,6 @@ const UI = {
                 <iframe 
                     src="${streamData.embedUrl}" 
                     allowfullscreen="true"
-                    scrolling="no"
-                    allow="autoplay; fullscreen"
                 ></iframe>
             </div>
         `;
