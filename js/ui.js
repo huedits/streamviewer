@@ -13,21 +13,6 @@ const UI = {
         this.elements.streamContainer = document.getElementById('streamContainer');
         this.elements.controlBar = document.querySelector('.control-bar');
     },
-
-    adjustGrid() {
-        const container = this.elements.streamContainer;
-        const count = StreamState.getCount();
-        
-        if (count <= 1) return; // Single card handled by CSS :has()
-        
-        if (count <= 6) {
-            // 2-6 cards: force 2 columns
-            container.style.gridTemplateColumns = 'repeat(2, 1fr)';
-        } else {
-            // 7+ cards: allow up to 3 columns
-            container.style.gridTemplateColumns = 'repeat(auto-fit, minmax(350px, 1fr))';
-        }
-    },
     
     createStreamCard(streamData) {
         const streamCard = document.createElement('div');
@@ -57,6 +42,24 @@ const UI = {
         return streamCard;
     },
     
+    adjustGrid() {
+        const container = this.elements.streamContainer;
+        const count = StreamState.getCount();
+        
+        // Remove all grid classes
+        container.classList.remove('single-card', 'two-columns', 'three-columns');
+        
+        if (count === 0) return;
+        
+        if (count === 1) {
+            container.classList.add('single-card');
+        } else if (count <= 6) {
+            container.classList.add('two-columns');
+        } else {
+            container.classList.add('three-columns');
+        }
+    },
+    
     addStreamCard(streamData) {
         this.removeEmptyState();
         
@@ -65,7 +68,7 @@ const UI = {
         
         ChatManager.addChatTab(streamData);
         
-        this.adjustGrid(); // Add this line
+        this.adjustGrid();
         
         requestAnimationFrame(() => {
             card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -98,7 +101,7 @@ const UI = {
                 this.showEmptyState();
             }
             
-            this.adjustGrid(); // Add this line
+            this.adjustGrid();
             this.updateStreamCount();
         };
         
@@ -124,6 +127,7 @@ const UI = {
                 <p>Select a platform, enter a <span>channel name</span> and click <span>+</span></p>
             </div>
         `;
+        this.elements.streamContainer.classList.remove('single-card', 'two-columns', 'three-columns');
     },
     
     updateStreamCount() {
