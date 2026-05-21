@@ -299,94 +299,63 @@ body {
     grid-template-columns: repeat(2, 1fr);
 }
 
-/* Stream Wrapper */
-.stream-wrapper {
-    position: relative;
-    background-color: #18181b;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid #2d2d35;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    width: 100%;
-    min-width: 0;
-    min-height: 0;
-    align-self: start;
-    display: flex;
-    flex-direction: column;
-}
-
-.stream-wrapper:hover {
-    border-color: #9147ff;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
-}
-
 /* Card Header */
 .stream-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 8px 12px;
-    background-color: #1f1f23;
     border-bottom: 1px solid #2d2d35;
     flex-shrink: 0;
     gap: 8px;
 }
 
-.stream-header-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex: 1;
-    min-width: 0;
-}
-
-.platform-badge {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    font-weight: bold;
-    padding: 3px 8px;
-    border-radius: 4px;
-    text-transform: uppercase;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-.platform-badge.twitch {
+/* Platform-specific header colors */
+.stream-header.header-twitch {
     background-color: #9147ff;
     color: white;
 }
 
-.platform-badge.kick {
+.stream-header.header-kick {
     background-color: #53fc18;
     color: #0e0e10;
 }
 
-.platform-badge.youtube {
+.stream-header.header-youtube {
     background-color: #ff0000;
     color: white;
 }
 
-.platform-badge .badge-icon {
-    width: 14px;
-    height: 14px;
+.stream-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+
+.platform-name {
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 0;
+    letter-spacing: 0.5px;
 }
 
 .stream-url {
     font-size: 12px;
-    color: #aaa;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     flex: 1;
+    opacity: 0.9;
 }
 
 /* Remove Button */
 .remove-btn {
     background: none;
     border: none;
-    color: #ff5555;
     cursor: pointer;
     font-size: 18px;
     padding: 0 4px;
@@ -399,11 +368,28 @@ body {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    opacity: 0.8;
 }
 
-.remove-btn:hover {
-    color: #ff0000;
-    background-color: rgba(255, 0, 0, 0.1);
+/* Remove button color matches header text */
+.stream-header.header-twitch .remove-btn,
+.stream-header.header-youtube .remove-btn {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.stream-header.header-twitch .remove-btn:hover,
+.stream-header.header-youtube .remove-btn:hover {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.stream-header.header-kick .remove-btn {
+    color: rgba(0, 0, 0, 0.7);
+}
+
+.stream-header.header-kick .remove-btn:hover {
+    color: #000;
+    background-color: rgba(0, 0, 0, 0.1);
 }
 
 /* Stream Iframe Container */

@@ -22,12 +22,9 @@ const UI = {
         const platformConfig = CONFIG.platforms[streamData.platform];
         
         streamCard.innerHTML = `
-            <div class="stream-header">
+            <div class="stream-header header-${streamData.platform}">
                 <div class="stream-header-left">
-                    <span class="platform-badge ${streamData.platform}">
-                        ${platformConfig.icon}
-                        ${platformConfig.name}
-                    </span>
+                    <span class="platform-name">${platformConfig.name}</span>
                     <span class="stream-url" title="${streamData.channel}">${streamData.channel}</span>
                 </div>
                 <button class="remove-btn" data-stream-id="${streamData.id}" title="Remove stream">×</button>
