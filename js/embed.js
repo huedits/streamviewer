@@ -7,15 +7,12 @@ const EmbedBuilder = {
             case 'twitch':
                 const twitchMatch = trimmed.match(/(?:twitch\.tv\/)([\w-]+)/);
                 return twitchMatch ? twitchMatch[1] : trimmed;
-            
             case 'kick':
                 const kickMatch = trimmed.match(/(?:kick\.com\/)([\w-]+)/);
                 return kickMatch ? kickMatch[1] : trimmed;
-            
             case 'youtube':
                 const youtubeMatch = trimmed.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/live\/)([\w-]{11})/);
                 return youtubeMatch ? youtubeMatch[1] : trimmed;
-            
             default:
                 return trimmed;
         }
@@ -23,19 +20,16 @@ const EmbedBuilder = {
     
     buildUrl(platform, channel) {
         let url = '';
-        const volume = VolumeManager ? VolumeManager.getVolume() : 50;
         
         switch (platform) {
             case 'twitch':
-                url = `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${CONFIG.twitchParent}&autoplay=true&volume=${volume / 100}`;
+                url = `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${CONFIG.twitchParent}&autoplay=true`;
                 break;
-            
             case 'kick':
                 url = `https://player.kick.com/${encodeURIComponent(channel)}?autoplay=true`;
                 break;
-            
             case 'youtube':
-                url = `https://www.youtube.com/embed/${encodeURIComponent(channel)}?autoplay=1&mute=1`;
+                url = `https://www.youtube.com/embed/${encodeURIComponent(channel)}?autoplay=1&mute=1&enablejsapi=1`;
                 break;
         }
         

@@ -2,8 +2,6 @@
 const App = {
     init() {
         UI.init();
-        VolumeManager.init();
-        VolumeManager.loadSavedVolume();
         ChatManager.init();
         this.displayVersion();
         Dropdown.init();

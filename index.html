@@ -26,25 +26,6 @@
                 <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
             </svg>
         </button>
-        
-        <!-- Volume Control -->
-        <div class="volume-control" id="volumeControl" title="Master Volume">
-            <button class="volume-icon-btn" id="volumeIconBtn">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" id="volumeIcon">
-                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-                </svg>
-            </button>
-            <input 
-                type="range" 
-                id="volumeSlider" 
-                class="volume-slider" 
-                min="0" 
-                max="100" 
-                value="50" 
-                title="Master Volume"
-            />
-            <span class="volume-value" id="volumeValue">50</span>
-        </div>
     </div>
 
     <!-- Main Content Area -->
@@ -71,9 +52,7 @@
                 <span class="chat-title">Chat</span>
                 <button class="chat-close-btn" id="chatCloseBtn" title="Close chat">×</button>
             </div>
-            <div class="chat-tabs" id="chatTabs">
-                <!-- Chat tabs will be added dynamically -->
-            </div>
+            <div class="chat-tabs" id="chatTabs"></div>
             <div class="chat-container" id="chatContainer">
                 <div class="chat-empty">
                     <span>💬</span>
@@ -96,7 +75,6 @@
     <script src="js/config.js"></script>
     <script src="js/state.js"></script>
     <script src="js/embed.js"></script>
-    <script src="js/volume.js"></script>
     <script src="js/chat.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/dropdown.js"></script>

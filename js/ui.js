@@ -26,9 +26,19 @@ const UI = {
                     allowfullscreen="true"
                     scrolling="no"
                     allow="autoplay; fullscreen"
+                    data-stream-id="${streamData.id}"
                 ></iframe>
             </div>
             <button class="remove-btn" data-stream-id="${streamData.id}" title="Remove stream">×</button>
+            <div class="volume-overlay" data-stream-id="${streamData.id}">
+                <button class="volume-icon-btn" data-stream-id="${streamData.id}" title="Mute/Unmute">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                    </svg>
+                </button>
+                <input type="range" class="volume-slider" min="0" max="100" value="50" data-stream-id="${streamData.id}">
+                <span class="volume-value">50</span>
+            </div>
         `;
         
         return streamCard;
@@ -43,6 +53,9 @@ const UI = {
         // Add chat tab
         ChatManager.addChatTab(streamData);
         
+        // Attach volume control events
+        this.attachVolumeEvents(card, streamData.id);
+        
         this.updateGridClass();
         
         requestAnimationFrame(() => {
@@ -50,6 +63,99 @@ const UI = {
         });
         
         return card;
+    },
+    
+    attachVolumeEvents(card, streamId) {
+        const slider = card.querySelector('.volume-slider');
+        const iconBtn = card.querySelector('.volume-icon-btn');
+        const valueDisplay = card.querySelector('.volume-value');
+        const iframe = card.querySelector('iframe');
+        
+        let currentVolume = 50;
+        let previousVolume = 50;
+        let isMuted = false;
+        
+        const updateIcon = () => {
+            const svg = iconBtn.querySelector('svg');
+            if (isMuted || currentVolume === 0) {
+                svg.innerHTML = `
+                    <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+                `;
+                iconBtn.classList.add('muted');
+            } else if (currentVolume < 50) {
+                svg.innerHTML = `
+                    <path d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z"/>
+                `;
+                iconBtn.classList.remove('muted');
+            } else {
+                svg.innerHTML = `
+                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                `;
+                iconBtn.classList.remove('muted');
+            }
+        };
+        
+        // Slider change
+        slider.addEventListener('input', (e) => {
+            e.stopPropagation();
+            currentVolume = parseInt(slider.value);
+            valueDisplay.textContent = currentVolume;
+            
+            if (currentVolume > 0) {
+                isMuted = false;
+                previousVolume = currentVolume;
+            } else {
+                isMuted = true;
+            }
+            
+            updateIcon();
+            this.setIframeVolume(iframe, currentVolume);
+        });
+        
+        // Icon click to toggle mute
+        iconBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (isMuted) {
+                currentVolume = previousVolume > 0 ? previousVolume : 50;
+                isMuted = false;
+            } else {
+                previousVolume = currentVolume;
+                currentVolume = 0;
+                isMuted = true;
+            }
+            
+            slider.value = currentVolume;
+            valueDisplay.textContent = currentVolume;
+            updateIcon();
+            this.setIframeVolume(iframe, currentVolume);
+        });
+        
+        // Initial volume set
+        this.setIframeVolume(iframe, currentVolume);
+    },
+    
+    setIframeVolume(iframe, volume) {
+        if (!iframe || !iframe.contentWindow) return;
+        
+        try {
+            // Post message to iframe for volume control
+            const volumeDecimal = volume / 100;
+            
+            // Works with YouTube API
+            iframe.contentWindow.postMessage(JSON.stringify({
+                event: 'command',
+                func: 'setVolume',
+                args: [volume]
+            }), '*');
+            
+            // Works with some players
+            iframe.contentWindow.postMessage({
+                type: 'setVolume',
+                volume: volumeDecimal
+            }, '*');
+        } catch (e) {
+            // Cross-origin may block this
+        }
     },
     
     removeStreamCard(streamId) {

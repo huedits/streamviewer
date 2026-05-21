@@ -838,3 +838,84 @@ body {
         width: 100%;
     }
 }
+
+/* Volume Control Overlay on Stream Card */
+.volume-overlay {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    z-index: 10;
+    background-color: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    border-radius: 6px;
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.stream-wrapper:hover .volume-overlay {
+    opacity: 1;
+}
+
+.volume-overlay .volume-icon-btn {
+    background: none;
+    border: none;
+    color: #ccc;
+    cursor: pointer;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    transition: color 0.2s;
+    min-width: 24px;
+}
+
+.volume-overlay .volume-icon-btn:hover {
+    color: #fff;
+}
+
+.volume-overlay .volume-icon-btn.muted {
+    color: #ff5555;
+}
+
+.volume-overlay .volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 70px;
+    height: 3px;
+    background: #555;
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+}
+
+.volume-overlay .volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.volume-overlay .volume-slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+.volume-overlay .volume-value {
+    font-size: 10px;
+    color: #ccc;
+    min-width: 22px;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+}
