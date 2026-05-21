@@ -1,6 +1,5 @@
 // Embed URL Generation
 const EmbedBuilder = {
-    // Parse channel/ID from user input
     parseInput(platform, input) {
         const trimmed = input.trim();
         
@@ -22,13 +21,13 @@ const EmbedBuilder = {
         }
     },
     
-    // Build embed URL
     buildUrl(platform, channel) {
         let url = '';
+        const volume = VolumeManager ? VolumeManager.getVolume() : 50;
         
         switch (platform) {
             case 'twitch':
-                url = `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${CONFIG.twitchParent}&autoplay=true`;
+                url = `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${CONFIG.twitchParent}&autoplay=true&volume=${volume / 100}`;
                 break;
             
             case 'kick':
@@ -43,7 +42,6 @@ const EmbedBuilder = {
         return url;
     },
     
-    // Get complete embed data
     getEmbedData(platform, input) {
         const channel = this.parseInput(platform, input);
         if (!channel) return null;
