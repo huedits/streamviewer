@@ -1,7 +1,7 @@
 // Configuration and Constants
 const CONFIG = {
     // Application version
-    version: '2.1.7',
+    version: '2.1.8',
     
     // Twitch embed parent domain - hardcoded for GitHub Pages
     twitchParent: 'huedits.github.io',
@@ -18,8 +18,8 @@ const CONFIG = {
         kick: {
             name: 'Kick',
             color: '#53fc18',
-            icon: `<svg class="platform-icon" viewBox="0 0 24 24" fill="#53fc18">
-                <path d="M37 .036h164.448v113.621h54.71v-56.82h54.731V.036h164.448v170.777h-54.73v56.82h-54.711v56.8h54.71v56.82h54.73V512.03H310.89v-56.82h-54.73v-56.8h-54.711v113.62H37V.036z"/>
+            icon: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="2" width="24" height="24">
+                <path d="M1.734 0.002h7.709v5.326h2.565v-2.663h2.566V0.002h7.709v8.005h-2.565v2.663h-2.565v2.662h2.565v2.663h2.565V24.001H14.573v-2.663h-2.565v-2.662h-2.565v5.326H1.734z" fill="#53fc18"/>
             </svg>`
         },
         youtube: {
