@@ -100,18 +100,39 @@ const UI = {
         const container = this.elements.streamContainer;
         const count = StreamState.getCount();
         
-        container.classList.remove('count-1', 'count-2', 'count-odd', 'count-even');
+        // Remove all count classes
+        container.classList.remove('count-1', 'count-2', 'count-3', 'count-4', 'count-5', 'count-6', 'count-odd', 'count-even');
         
         if (count === 0) return;
         
-        if (count === 1) {
-            container.classList.add('count-1');
-        } else if (count === 2) {
-            container.classList.add('count-2');
-        } else if (count % 2 === 1) {
-            container.classList.add('count-odd');
-        } else {
-            container.classList.add('count-even');
+        // Specific layouts for each count up to 6
+        switch(count) {
+            case 1:
+                container.classList.add('count-1');
+                break;
+            case 2:
+                container.classList.add('count-2');
+                break;
+            case 3:
+                container.classList.add('count-3');
+                break;
+            case 4:
+                container.classList.add('count-4');
+                break;
+            case 5:
+                container.classList.add('count-5');
+                break;
+            case 6:
+                container.classList.add('count-6');
+                break;
+            default:
+                // For 7+ cards, use odd/even pattern with 3 columns
+                if (count % 2 === 1) {
+                    container.classList.add('count-odd');
+                } else {
+                    container.classList.add('count-even');
+                }
+                break;
         }
     },
     
