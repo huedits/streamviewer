@@ -1,0 +1,45 @@
+/* Responsive breakpoints */
+@media (max-width: 768px) {
+    .stream-container {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+    
+    .stream-container:has(.stream-wrapper:only-child) {
+        max-width: 95%;
+    }
+    
+    .chat-panel.open {
+        width: 280px;
+    }
+}
+
+@media (max-width: 500px) {
+    .control-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .control-bar input[type="text"] {
+        min-width: unset;
+        width: 100%;
+    }
+    
+    .stream-container {
+        grid-template-columns: 1fr;
+        padding: 10px;
+        gap: 10px;
+    }
+    
+    .custom-dropdown {
+        width: 100%;
+    }
+    
+    .chat-panel.open {
+        width: 100%;
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 50;
+    }
+}

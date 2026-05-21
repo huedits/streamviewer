@@ -1,0 +1,163 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #0e0e10;
+    color: #efeff1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Main Content Area - Flex row */
+.main-content {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    min-height: 0;
+    position: relative;
+}
+
+/* Stream Grid - Auto-fitting responsive grid */
+.stream-container {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: grid;
+    gap: 12px;
+    padding: 15px;
+    width: 100%;
+    /* Auto-fit: automatically calculates columns based on available space */
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    grid-auto-rows: min-content;
+    align-content: start;
+}
+
+/* Single card: center it and limit max size */
+.stream-container:has(.stream-wrapper:only-child) {
+    grid-template-columns: 1fr;
+    max-width: 90%;
+    margin: 0 auto;
+    align-content: center;
+    justify-items: center;
+}
+
+.stream-container:has(.stream-wrapper:only-child) .stream-wrapper {
+    width: 100%;
+    height: fit-content;
+    max-height: 100%;
+}
+
+.stream-container:has(.stream-wrapper:only-child) .stream-iframe-container {
+    max-height: calc(100vh - 200px);
+}
+
+/* Custom scrollbar */
+.stream-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.stream-container::-webkit-scrollbar-track {
+    background: #1f1f23;
+    border-radius: 4px;
+}
+
+.stream-container::-webkit-scrollbar-thumb {
+    background: #3a3a3d;
+    border-radius: 4px;
+}
+
+.stream-container::-webkit-scrollbar-thumb:hover {
+    background: #9147ff;
+}
+
+.stream-container {
+    scrollbar-width: thin;
+    scrollbar-color: #3a3a3d #1f1f23;
+}
+
+/* Stream Wrapper */
+.stream-wrapper {
+    position: relative;
+    background-color: #18181b;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #2d2d35;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    height: fit-content;
+}
+
+.stream-wrapper:hover {
+    border-color: #9147ff;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+}
+
+/* Stream Iframe Container */
+.stream-iframe-container {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%;
+    background-color: #000;
+    min-height: 0;
+    flex-shrink: 0;
+}
+
+.stream-iframe-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* Empty state */
+.empty-state {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #777;
+    font-size: 18px;
+    padding: 60px;
+    text-align: center;
+    animation: fadeIn 0.5s ease;
+    height: 100%;
+    min-height: 300px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.empty-state .icon {
+    font-size: 80px;
+    margin-bottom: 20px;
+    opacity: 0.3;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.empty-state span {
+    color: #9147ff;
+    font-weight: bold;
+}

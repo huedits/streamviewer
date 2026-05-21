@@ -1,0 +1,36 @@
+/* Footer */
+.site-footer {
+    background-color: #18181b;
+    border-top: 1px solid #2d2d35;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.footer-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: #aaa;
+}
+
+.footer-text {
+    font-weight: 500;
+}
+
+.footer-separator {
+    color: #3a3a3d;
+}
+
+.footer-version {
+    color: #9147ff;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    background-color: #1f1f23;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
