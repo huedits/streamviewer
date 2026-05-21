@@ -1,7 +1,8 @@
 /* Responsive breakpoints */
 @media (max-width: 768px) {
     .stream-container {
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(max(280px, calc((100% - 24px) / 2)), 1fr));
+        grid-auto-rows: minmax(min-content, calc((100vh - 200px) / 2));
     }
     
     .stream-container:has(.stream-wrapper:only-child) {
